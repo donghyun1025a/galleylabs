@@ -139,7 +139,7 @@ header.site{
 
 /* ---------- hero ---------- */
 .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line-soft)}
-#halftone{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+#halftone{position:absolute;inset:0;width:100%;height:100%;z-index:0;mix-blend-mode:var(--blend)}
 .hero-inner{position:relative;z-index:1;padding:clamp(72px,11vh,130px) 0 clamp(64px,9vh,110px);text-align:left}
 .eyebrow{
   font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
@@ -218,7 +218,8 @@ header.site{
 .marquee span::after{content:"⊕";color:var(--pink);font-size:12px;letter-spacing:0}
 
 /* ---------- sections ---------- */
-section.proof{padding:clamp(72px,10vh,120px) 0;border-bottom:1px solid var(--line-soft)}
+section.proof{padding:clamp(72px,10vh,120px) 0;border-bottom:1px solid var(--line-soft);scroll-margin-top:86px}
+footer.colophon{scroll-margin-top:86px}
 .proof-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin-bottom:14px;flex-wrap:wrap}
 .proof-no{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
 .proof-no b{color:var(--pink);font-weight:500}
@@ -437,6 +438,142 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
 }
 .colo-mark{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:-.01em}
 .colo-mark em{font-style:italic;font-weight:600;color:var(--pink)}
+
+/* ---------- header icon buttons ---------- */
+.icon-btn{
+  height:34px;min-width:34px;padding:0 8px;border:1px solid var(--line);border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--ink-2);
+  transition:border-color .18s,color .18s;
+}
+.icon-btn:hover{border-color:var(--ink-3);color:var(--ink)}
+.icon-btn.kbd-btn{font-family:var(--mono);font-size:11px;letter-spacing:.04em}
+.icon-btn .snd-wave{display:none}
+.icon-btn[aria-pressed="true"] .snd-wave{display:block}
+.icon-btn[aria-pressed="true"] .snd-off{display:none}
+.note-k{
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-2);
+  border:1px solid var(--line);border-radius:5px;padding:2px 6px;transition:all .16s;
+}
+.note-k:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ---------- foundry ---------- */
+.foundry-machine{
+  margin-top:44px;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  background:var(--paper-raise);box-shadow:var(--shadow);
+  display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+}
+@media (max-width:860px){.foundry-machine{grid-template-columns:1fr}}
+.foundry-controls{padding:30px;border-right:1px solid var(--line-soft);display:flex;flex-direction:column;gap:22px}
+@media (max-width:860px){.foundry-controls{border-right:0;border-bottom:1px solid var(--line-soft)}}
+.foundry-input{
+  font-family:var(--display);font-weight:900;font-size:clamp(24px,3vw,34px);letter-spacing:-.01em;
+  color:var(--ink);background:transparent;border:0;border-bottom:2px solid var(--line);
+  padding:6px 2px 10px;width:100%;transition:border-color .2s;text-transform:uppercase;
+}
+.foundry-input:focus{outline:none;border-bottom-color:var(--pink)}
+.foundry-input::placeholder{color:var(--ink-3)}
+.ink-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ink-pick{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;
+  border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--ink-2);
+  font-family:var(--mono);transition:all .16s;
+}
+.ink-pick .chip{width:9px;height:9px}
+.ink-pick:hover{border-color:var(--ink-3);color:var(--ink)}
+.ink-pick[aria-checked="true"]{border-color:var(--ink);color:var(--ink);background:var(--paper)}
+.foundry-actions{display:flex;gap:12px;flex-wrap:wrap}
+.foundry-actions .btn{padding:12px 22px;font-size:14px}
+.foundry-hint{font-size:11px;letter-spacing:.06em;color:var(--ink-3);line-height:1.7}
+.foundry-bed{padding:30px;display:grid;place-items:center;background:
+  repeating-linear-gradient(45deg,transparent,transparent 5px,color-mix(in srgb,var(--ink) 3%,transparent) 5px,color-mix(in srgb,var(--ink) 3%,transparent) 6px)}
+.sheet-wrap{position:relative;width:min(340px,80%);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.sheet-wrap:hover{transform:rotate(-1deg) scale(1.015)}
+#proofSheet{width:100%;height:auto;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.12),0 18px 44px -18px rgba(0,0,0,.38)}
+.press-roller{
+  position:absolute;left:-4%;right:-4%;height:26px;top:0;border-radius:999px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,#fff),var(--ink) 55%,color-mix(in srgb,var(--ink) 80%,#000));
+  box-shadow:0 6px 18px -4px rgba(0,0,0,.45);opacity:0;pointer-events:none;
+}
+.press-roller.rolling{animation:roll 1s cubic-bezier(.45,.05,.35,1) forwards}
+@keyframes roll{
+  0%{opacity:0;top:-3%}12%{opacity:1}
+  88%{opacity:1}100%{opacity:0;top:96%}
+}
+@media (prefers-reduced-motion:reduce){.press-roller.rolling{animation:none;opacity:0}}
+
+/* ---------- fable engine ---------- */
+.fable-machine{
+  margin-top:44px;border:1px solid var(--line);border-radius:14px;background:var(--paper-raise);
+  box-shadow:var(--shadow);padding:clamp(26px,4vw,52px);position:relative;overflow:hidden;
+}
+.fable-machine::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue) 0 50%,var(--pink) 50% 100%);
+}
+.fable-meta{
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:30px;
+}
+.fable-sheet{max-width:640px;margin:0 auto;text-align:center;min-height:300px}
+.fable-title{
+  font-family:var(--display);font-weight:900;font-size:clamp(24px,3.2vw,36px);
+  letter-spacing:-.015em;margin-bottom:26px;text-wrap:balance;
+}
+.fable-title .fl{display:inline-block}
+.fable-body p{
+  font-family:var(--display);font-style:italic;font-weight:600;
+  font-size:clamp(16.5px,1.9vw,20px);line-height:1.65;color:var(--ink);
+  margin-bottom:10px;text-wrap:pretty;
+}
+.fable-moral{
+  margin-top:26px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-2);line-height:1.8;
+}
+.fable-moral::before{content:"⊕";color:var(--pink);margin-right:10px}
+.fable-line{opacity:0;transform:translateY(10px)}
+.js .fable-line.set{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1);transition-delay:var(--fd,0s)}
+@media (prefers-reduced-motion:reduce){.fable-line{opacity:1;transform:none}.js .fable-line.set{transition:none}}
+.fable-actions{display:flex;gap:12px;justify-content:center;margin-top:36px;flex-wrap:wrap}
+.fable-actions .btn{padding:12px 24px;font-size:14px}
+
+/* ---------- command palette ---------- */
+.cmdk{position:fixed;inset:0;z-index:100;display:grid;place-items:start center;padding-top:14vh}
+.cmdk[hidden]{display:none}
+.cmdk-scrim{position:absolute;inset:0;background:color-mix(in srgb,var(--ink) 32%,transparent);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.cmdk-panel{
+  position:relative;width:min(560px,calc(100vw - 40px));border-radius:14px;overflow:hidden;
+  background:var(--paper-raise);border:1px solid var(--line);
+  box-shadow:0 24px 80px -20px rgba(0,0,0,.45);
+  animation:ticketIn .22s cubic-bezier(.2,.7,.2,1);
+}
+@keyframes ticketIn{from{opacity:0;transform:translateY(14px) scale(.98)}}
+@media (prefers-reduced-motion:reduce){.cmdk-panel{animation:none}}
+.cmdk-head{
+  display:flex;justify-content:space-between;padding:12px 18px;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  border-bottom:1px dashed var(--line);
+}
+.cmdk-input{
+  width:100%;border:0;background:transparent;color:var(--ink);
+  font-family:var(--body);font-size:17px;padding:16px 18px;
+  border-bottom:1px solid var(--line-soft);
+}
+.cmdk-input:focus{outline:none}
+.cmdk-list{list-style:none;max-height:300px;overflow-y:auto;padding:8px}
+.cmdk-list li{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:11px 12px;border-radius:8px;font-size:14.5px;cursor:pointer;color:var(--ink-2);
+}
+.cmdk-list li .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.cmdk-list li[aria-selected="true"]{background:var(--paper);color:var(--ink)}
+.cmdk-list li span:first-child::before{content:"→";color:var(--pink);opacity:0;margin-right:8px;transition:opacity .12s}
+.cmdk-list li[aria-selected="true"] span:first-child::before{opacity:1}
+.cmdk-foot{
+  display:flex;justify-content:space-between;padding:10px 18px;font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+  border-top:1px dashed var(--line);
+}
 </style>
 
 </head>
@@ -456,9 +593,14 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
     <a class="wordmark" href="#top">Galley<em>Labs</em></a>
     <div class="navlinks">
       <a href="#press">The Press</a>
+      <a href="#foundry">Foundry</a>
+      <a href="#fables">Fables</a>
       <a href="#specimens">Specimens</a>
-      <a href="#density">Densities</a>
       <a href="#colophon">Colophon</a>
+      <button class="icon-btn" id="soundBtn" aria-label="Toggle press sounds" aria-pressed="false" title="Press sounds">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M2 5.5h2.5L8 2.5v10L4.5 9.5H2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path class="snd-wave" d="M10.5 5.5c1 .9 1 3.1 0 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path class="snd-off" d="M10 6l3 3M13 6l-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="icon-btn kbd-btn" id="cmdkBtn" aria-label="Open the job ticket" title="Job ticket">⌘K</button>
       <button class="theme-btn" id="themeBtn" aria-label="Toggle light and dark theme" title="Toggle theme"><span class="half"></span></button>
     </div>
   </nav>
@@ -487,7 +629,7 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
         <a class="btn btn-ink" href="#press">Pull a proof <span class="arrow">↓</span></a>
         <a class="btn btn-ghost" href="#colophon">Read the colophon</a>
       </div>
-      <p class="press-note"><span class="pulse"></span> The press is warm · move your cursor to shift the registration</p>
+      <p class="press-note"><span class="pulse"></span> The press is warm · drag your cursor through the ink · <button class="note-k" id="noteCmdk" type="button">⌘K</button> opens the job ticket</p>
     </div>
   </section>
 
@@ -495,8 +637,8 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
   <div class="marquee" aria-hidden="true">
     <div class="track" id="mqTrack">
       <span>Deep reasoning</span><span>1M-token galley</span><span>Code composition</span>
-      <span>Tool use</span><span>Vision</span><span>Agentic workflows</span>
-      <span>Extended thinking</span><span>Craft, at press speed</span>
+      <span>Live ink physics</span><span>144,000,000 fables</span><span>Tool use</span>
+      <span>Vision</span><span>Synthesized sound</span><span>Craft, at press speed</span>
     </div>
   </div>
 
@@ -541,12 +683,79 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
     </div>
   </section>
 
+  <!-- ============ THE FOUNDRY ============ -->
+  <section class="proof" id="foundry">
+    <div class="wrap">
+      <div class="proof-head reveal">
+        <div>
+          <p class="proof-no">Proof <b>Nº 03</b> — Job work</p>
+          <h2 class="h2">The Foundry</h2>
+        </div>
+      </div>
+      <p class="section-sub reveal">Your turn at the bench. Set a line, choose your inks, and pull a proof — the press prints it with real misregistration, uneven ink, and paper grain, then hands you the sheet to keep.</p>
+
+      <div class="foundry-machine reveal">
+        <div class="foundry-controls">
+          <label class="pane-label" for="foundryInput">Composing stick — up to 26 characters</label>
+          <input id="foundryInput" class="foundry-input" type="text" maxlength="26" value="SET IN FABLE" autocomplete="off" spellcheck="false">
+          <div class="ink-row" role="radiogroup" aria-label="Ink selection">
+            <span class="pane-label" style="margin:0">Inks</span>
+            <button class="ink-pick" role="radio" aria-checked="true" data-ink="duo"><i class="chip b"></i><i class="chip p"></i> Duotone</button>
+            <button class="ink-pick" role="radio" aria-checked="false" data-ink="blue"><i class="chip b"></i> Riso blue</button>
+            <button class="ink-pick" role="radio" aria-checked="false" data-ink="pink"><i class="chip p"></i> Fluor. pink</button>
+            <button class="ink-pick" role="radio" aria-checked="false" data-ink="ink"><i class="chip k"></i> Ink black</button>
+          </div>
+          <div class="foundry-actions">
+            <button class="btn btn-ink" id="pullBtn" type="button">Pull the proof</button>
+            <button class="btn btn-ghost" id="dlBtn" type="button" disabled>Download the sheet</button>
+          </div>
+          <p class="foundry-hint mono">Every pull is unique — the jitter, the ink starvation, the grain: never the same sheet twice.</p>
+        </div>
+        <div class="foundry-bed">
+          <div class="sheet-wrap" id="sheetWrap">
+            <canvas id="proofSheet" width="880" height="1100" aria-label="Your printed proof"></canvas>
+            <div class="press-roller" id="pressRoller" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FABLE ENGINE ============ -->
+  <section class="proof" id="fables">
+    <div class="wrap">
+      <div class="proof-head reveal">
+        <div>
+          <p class="proof-no">Proof <b>Nº 04</b> — Editions</p>
+          <h2 class="h2">The Fable <em>engine</em></h2>
+        </div>
+      </div>
+      <p class="section-sub reveal">A press named Fable ought to keep some. This engine can set <b id="fableCount" style="color:var(--ink);font-variant-numeric:tabular-nums">—</b> distinct fables from its case of interchangeable sorts. Pull the lever; the next one is yours alone.</p>
+
+      <div class="fable-machine reveal">
+        <div class="fable-meta mono">
+          <span id="fableSeed">SEED —</span>
+          <span id="fableIndex">EDITION —</span>
+        </div>
+        <div class="fable-sheet" id="fableSheet" aria-live="polite">
+          <h3 class="fable-title" id="fableTitle"></h3>
+          <div class="fable-body" id="fableBody"></div>
+          <p class="fable-moral mono" id="fableMoral"></p>
+        </div>
+        <div class="fable-actions">
+          <button class="btn btn-ink" id="fableBtn" type="button">Pull another <span class="arrow">↻</span></button>
+          <button class="btn btn-ghost" id="fableCopy" type="button">Copy this edition</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ SPECIMENS ============ -->
   <section class="proof" id="specimens">
     <div class="wrap">
       <div class="proof-head reveal">
         <div>
-          <p class="proof-no">Proof <b>Nº 03</b> — Type specimens</p>
+          <p class="proof-no">Proof <b>Nº 05</b> — Type specimens</p>
           <h2 class="h2">What the press <em>can hold</em></h2>
         </div>
       </div>
@@ -613,7 +822,7 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
     <div class="wrap">
       <div class="proof-head reveal">
         <div>
-          <p class="proof-no">Proof <b>Nº 04</b> — Densitometer</p>
+          <p class="proof-no">Proof <b>Nº 06</b> — Densitometer</p>
           <h2 class="h2">Ink density, <em>measured</em></h2>
         </div>
       </div>
@@ -672,7 +881,8 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
         <div>
           <h4>This proof</h4>
           <p>Set in <b>Fraunces</b>, <b>Schibsted Grotesk</b> &amp; <b>IBM Plex Mono</b>, embedded whole so nothing falls back.
-          Composed, engineered, and pulled in one pass on the <b>Fable&nbsp;5</b> press — copy, layout, motion, and ink chosen by the machine that set them.</p>
+          Composed, engineered, and pulled in one pass on the <b>Fable&nbsp;5</b> press — copy, layout, motion, and ink chosen by the machine that set them.
+          The ink obeys real fluid dynamics, computed on your GPU. The sounds are synthesized in your browser. No libraries, no assets, no requests.</p>
           <p class="inkline">
             <i class="chip b"></i> 0078BF&ensp;<i class="chip p"></i> FF48B0&ensp;<i class="chip k"></i> 1A1D24&ensp;· two inks, one impression
           </p>
@@ -681,7 +891,8 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
           <h4>Off the shelf</h4>
           <div class="colo-links">
             <a href="#press">Run the press</a>
-            <a href="#specimens">Browse specimens</a>
+            <a href="#foundry">Set your own proof</a>
+            <a href="#fables">Pull a fable</a>
             <a href="#density">Check the densities</a>
             <a href="https://www.anthropic.com/news/claude-fable-5-mythos-5" target="_blank" rel="noopener">About Fable 5</a>
           </div>
@@ -695,6 +906,19 @@ footer.colophon{padding:clamp(60px,8vh,90px) 0 40px}
     </div>
   </footer>
 </main>
+
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Job ticket" hidden>
+  <div class="cmdk-scrim" id="cmdkScrim"></div>
+  <div class="cmdk-panel">
+    <div class="cmdk-head mono">
+      <span>Galleylabs · job ticket</span>
+      <span>ESC to file</span>
+    </div>
+    <input class="cmdk-input" id="cmdkInput" type="text" placeholder="What shall the press do?" autocomplete="off" spellcheck="false" aria-label="Search jobs">
+    <ul class="cmdk-list" id="cmdkList" role="listbox"></ul>
+    <div class="cmdk-foot mono"><span>↑↓ select</span><span>↵ run the job</span></div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -749,55 +973,293 @@ if(!reduced){
   });
 }
 
-/* ---------- halftone canvas ---------- */
-var cv=document.getElementById("halftone"),ctx=cv.getContext("2d");
-var dots=[],px=-1e4,py=-1e4,t0=0,running=true,dpr=Math.min(window.devicePixelRatio||1,2);
+/* ==========================================================
+   INK — a real fluid, solved on your GPU.
+   Semi-Lagrangian advection, vorticity confinement, Jacobi
+   pressure projection. Two ink channels (riso blue / pink)
+   composited subtractively on paper, additively in the dark.
+   ========================================================== */
+var cv=document.getElementById("halftone");
 function cssVar(n){return getComputedStyle(doc).getPropertyValue(n).trim();}
-function buildDots(){
-  dots=[];
-  var w=cv.clientWidth,h=cv.clientHeight,gap=30;
-  for(var y=gap/2;y<h;y+=gap)for(var x=gap/2;x<w;x+=gap)
-    dots.push({x:x,y:y,ph:(x*0.7+y*1.3)%6.283});
-  cv.width=w*dpr;cv.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
-}
-function drawDots(ts){
-  if(!running)return;
-  var w=cv.clientWidth,h=cv.clientHeight;
-  ctx.clearRect(0,0,w,h);
-  var dark=currentTheme()==="dark";
-  ctx.globalCompositeOperation=dark?"screen":"multiply";
-  var blue=cssVar("--blue"),pink=cssVar("--pink");
-  var t=reduced?0:(ts||0)/1000;
-  for(var i=0;i<dots.length;i++){
-    var d=dots[i];
-    var dx=d.x-px,dy=d.y-py,dist=Math.sqrt(dx*dx+dy*dy);
-    var near=Math.max(0,1-dist/220);
-    var breathe=reduced?0.5:(Math.sin(t*0.8+d.ph)*0.5+0.5);
-    var r=0.7+breathe*0.9+near*4.2;
-    var a=(dark?0.10:0.09)+breathe*0.05+near*0.5;
-    ctx.globalAlpha=Math.min(a,0.75);
-    ctx.fillStyle=(i%2===0)?blue:pink;
-    ctx.beginPath();
-    ctx.arc(d.x+(near*dx*-0.06),d.y+(near*dy*-0.06),r,0,6.283);
-    ctx.fill();
+function hexRgb(h){h=h.replace("#","");if(h.length===3)h=h.replace(/./g,function(c){return c+c;});
+  var n=parseInt(h,16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+
+function staticInk(){
+  var c2=cv.getContext("2d");if(!c2)return;
+  function paint(){
+    var w=cv.clientWidth,h=cv.clientHeight;cv.width=w;cv.height=h;
+    c2.clearRect(0,0,w,h);
+    var dark=currentTheme()==="dark";
+    c2.fillStyle=dark?"#000":"#fff";c2.fillRect(0,0,w,h);
+    c2.globalCompositeOperation=dark?"screen":"multiply";
+    var blobs=[[0.78,0.3,0.3,cssVar("--blue")],[0.68,0.62,0.24,cssVar("--pink")],[0.2,0.82,0.2,cssVar("--blue")]];
+    blobs.forEach(function(b){
+      var g=c2.createRadialGradient(b[0]*w,b[1]*h,0,b[0]*w,b[1]*h,b[2]*Math.max(w,h));
+      var col=b[3];
+      g.addColorStop(0,col+(dark?"55":"40"));g.addColorStop(1,col+"00");
+      c2.fillStyle=g;c2.fillRect(0,0,w,h);
+    });
   }
-  ctx.globalAlpha=1;
-  if(!reduced)requestAnimationFrame(drawDots);
+  paint();
+  window.addEventListener("resize",paint);
+  themeBtn.addEventListener("click",function(){setTimeout(paint,20);});
 }
-function heroPointer(e){
-  var r=cv.getBoundingClientRect();px=e.clientX-r.left;py=e.clientY-r.top;
-  if(reduced)drawDots(0);
+
+var fluid=(function(){
+  if(reduced)return null;
+  var gl=cv.getContext("webgl2",{alpha:false,depth:false,stencil:false,antialias:false,preserveDrawingBuffer:false});
+  if(!gl)return null;
+  if(!gl.getExtension("EXT_color_buffer_float"))return null;
+
+  var VS="#version 300 es\nprecision highp float;in vec2 aPos;out vec2 vUv;void main(){vUv=aPos*0.5+0.5;gl_Position=vec4(aPos,0.,1.);}";
+  function frag(src){return "#version 300 es\nprecision highp float;precision highp sampler2D;in vec2 vUv;out vec4 o;\n"+src;}
+  function compile(type,src){
+    var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  var vs=compile(gl.VERTEX_SHADER,VS);
+  function program(fsrc){
+    var p=gl.createProgram();
+    gl.attachShader(p,vs);gl.attachShader(p,compile(gl.FRAGMENT_SHADER,frag(fsrc)));
+    gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+    var u={},n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);
+    for(var i=0;i<n;i++){var inf=gl.getActiveUniform(p,i);u[inf.name]=gl.getUniformLocation(p,inf.name);}
+    return{p:p,u:u};
+  }
+
+  var pAdvect=program(
+    "uniform sampler2D uVel,uSrc;uniform vec2 uTexel;uniform float uDt,uDiss;"+
+    "void main(){vec2 c=vUv-uDt*texture(uVel,vUv).xy*uTexel;o=uDiss*texture(uSrc,c);}");
+  var pSplat=program(
+    "uniform sampler2D uTarget;uniform vec3 uColor;uniform vec2 uPoint;uniform float uRadius,uAspect;"+
+    "void main(){vec2 p=vUv-uPoint;p.x*=uAspect;vec3 add=uColor*exp(-dot(p,p)/uRadius);"+
+    "o=vec4(texture(uTarget,vUv).xyz+add,1.);}");
+  var pCurl=program(
+    "uniform sampler2D uVel;uniform vec2 uTexel;"+
+    "void main(){float L=texture(uVel,vUv-vec2(uTexel.x,0.)).y;float R=texture(uVel,vUv+vec2(uTexel.x,0.)).y;"+
+    "float B=texture(uVel,vUv-vec2(0.,uTexel.y)).x;float T=texture(uVel,vUv+vec2(0.,uTexel.y)).x;"+
+    "o=vec4(0.5*(R-L-T+B),0.,0.,1.);}");
+  var pVort=program(
+    "uniform sampler2D uVel,uCurl;uniform vec2 uTexel;uniform float uEps,uDt;"+
+    "void main(){float L=texture(uCurl,vUv-vec2(uTexel.x,0.)).x;float R=texture(uCurl,vUv+vec2(uTexel.x,0.)).x;"+
+    "float B=texture(uCurl,vUv-vec2(0.,uTexel.y)).x;float T=texture(uCurl,vUv+vec2(0.,uTexel.y)).x;"+
+    "float C=texture(uCurl,vUv).x;"+
+    "vec2 f=0.5*vec2(abs(T)-abs(B),abs(R)-abs(L));f/=length(f)+1e-4;f*=uEps*C;f.y*=-1.;"+
+    "vec2 v=texture(uVel,vUv).xy+f*uDt;o=vec4(clamp(v,-1000.,1000.),0.,1.);}");
+  var pDiv=program(
+    "uniform sampler2D uVel;uniform vec2 uTexel;"+
+    "void main(){float L=texture(uVel,vUv-vec2(uTexel.x,0.)).x;float R=texture(uVel,vUv+vec2(uTexel.x,0.)).x;"+
+    "float B=texture(uVel,vUv-vec2(0.,uTexel.y)).y;float T=texture(uVel,vUv+vec2(0.,uTexel.y)).y;"+
+    "o=vec4(0.5*(R-L+T-B),0.,0.,1.);}");
+  var pJacobi=program(
+    "uniform sampler2D uPress,uDiv;uniform vec2 uTexel;"+
+    "void main(){float L=texture(uPress,vUv-vec2(uTexel.x,0.)).x;float R=texture(uPress,vUv+vec2(uTexel.x,0.)).x;"+
+    "float B=texture(uPress,vUv-vec2(0.,uTexel.y)).x;float T=texture(uPress,vUv+vec2(0.,uTexel.y)).x;"+
+    "float d=texture(uDiv,vUv).x;o=vec4((L+R+B+T-d)*0.25,0.,0.,1.);}");
+  var pGrad=program(
+    "uniform sampler2D uPress,uVel;uniform vec2 uTexel;"+
+    "void main(){float L=texture(uPress,vUv-vec2(uTexel.x,0.)).x;float R=texture(uPress,vUv+vec2(uTexel.x,0.)).x;"+
+    "float B=texture(uPress,vUv-vec2(0.,uTexel.y)).x;float T=texture(uPress,vUv+vec2(0.,uTexel.y)).x;"+
+    "vec2 v=texture(uVel,vUv).xy-0.5*vec2(R-L,T-B);o=vec4(v,0.,1.);}");
+  var pShow=program(
+    "uniform sampler2D uDye;uniform vec3 uInkA,uInkB;uniform int uDark;"+
+    "void main(){vec2 d=texture(uDye,vUv).rg;"+
+    "float a=1.-exp(-d.r);float b=1.-exp(-d.g);vec3 col;"+
+    "if(uDark==0){col=(vec3(1.)-a*(vec3(1.)-uInkA))*(vec3(1.)-b*(vec3(1.)-uInkB));}"+
+    "else{col=clamp(uInkA*a+uInkB*b,0.,1.);}o=vec4(col,1.);}");
+
+  var quad=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+
+  function fbo(w,h,ifmt,fmt){
+    var t=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D,t);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D,0,ifmt,w,h,0,fmt,gl.HALF_FLOAT,null);
+    var f=gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+    gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+    return{t:t,f:f,w:w,h:h,texel:[1/w,1/h]};
+  }
+  function dbl(w,h,ifmt,fmt){
+    var a=fbo(w,h,ifmt,fmt),b=fbo(w,h,ifmt,fmt);
+    return{get r(){return a;},get w(){return b;},swap:function(){var t=a;a=b;b=t;},texel:a.texel,wd:w,ht:h};
+  }
+  function bindTex(t,unit){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);return unit;}
+  function blit(target){
+    gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.f:null);
+    gl.viewport(0,0,target?target.w:gl.drawingBufferWidth,target?target.h:gl.drawingBufferHeight);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }
+
+  var vel,dye,press,div,curl,W,H;
+  function sizes(){
+    var cw=Math.max(2,cv.clientWidth),ch=Math.max(2,cv.clientHeight);
+    var dpr=Math.min(window.devicePixelRatio||1,1.5);
+    cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);
+    var ar=cw/ch;
+    function dims(res){return ar>=1?[res,Math.max(2,Math.round(res/ar))]:[Math.max(2,Math.round(res*ar)),res];}
+    var sv=dims(144),sd=dims(520);
+    vel=dbl(sv[0],sv[1],gl.RG16F,gl.RG);
+    dye=dbl(sd[0],sd[1],gl.RG16F,gl.RG);
+    press=dbl(sv[0],sv[1],gl.R16F,gl.RED);
+    div=fbo(sv[0],sv[1],gl.R16F,gl.RED);
+    curl=fbo(sv[0],sv[1],gl.R16F,gl.RED);
+    W=sv[0];H=sv[1];
+  }
+  sizes();
+
+  var inkA=hexRgb(cssVar("--blue")),inkB=hexRgb(cssVar("--pink")),dark=currentTheme()==="dark"?1:0;
+  function refreshInks(){
+    setTimeout(function(){
+      inkA=hexRgb(cssVar("--blue"));inkB=hexRgb(cssVar("--pink"));
+      dark=currentTheme()==="dark"?1:0;
+    },30);
+  }
+  themeBtn.addEventListener("click",refreshInks);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",refreshInks);
+
+  function splat(x,y,dx,dy,q,chan){
+    gl.useProgram(pSplat.p);
+    gl.uniform1f(pSplat.u.uAspect,W/H);
+    gl.uniform2f(pSplat.u.uPoint,x,y);
+    gl.uniform1f(pSplat.u.uRadius,0.0016);
+    gl.uniform1i(pSplat.u.uTarget,bindTex(vel.r.t,0));
+    gl.uniform3f(pSplat.u.uColor,dx,dy,0);
+    blit(vel.w);vel.swap();
+    gl.uniform1f(pSplat.u.uRadius,0.0011);
+    gl.uniform1i(pSplat.u.uTarget,bindTex(dye.r.t,0));
+    gl.uniform3f(pSplat.u.uColor,chan===0?q:0,chan===1?q:0,0);
+    blit(dye.w);dye.swap();
+  }
+
+  var last=performance.now(),running=true,idleT=Math.random()*100;
+  function step(now){
+    if(!running)return;
+    var dt=Math.min((now-last)/1000,1/30);last=now;
+    idleT+=dt;
+
+    // idle emitters: two slow wandering nibs, one per ink
+    var t=idleT;
+    if(Math.random()<0.9){
+      var x1=0.5+0.36*Math.cos(t*0.23)+0.06*Math.sin(t*0.9);
+      var y1=0.48+0.27*Math.sin(t*0.17)+0.05*Math.cos(t*0.7);
+      splat(x1,y1,Math.cos(t*0.6)*46,Math.sin(t*0.5)*46,0.028,0);
+      var x2=0.5+0.33*Math.cos(-t*0.19+2.4),y2=0.5+0.3*Math.sin(-t*0.21+1.1);
+      splat(x2,y2,Math.sin(t*0.45)*-42,Math.cos(t*0.38)*42,0.024,1);
+    }
+    while(queue.length){var s=queue.shift();splat(s[0],s[1],s[2],s[3],s[4],s[5]);}
+
+    var vd=Math.exp(-0.55*dt),dd=Math.exp(-0.28*dt);
+
+    gl.useProgram(pCurl.p);
+    gl.uniform2fv(pCurl.u.uTexel,vel.texel);
+    gl.uniform1i(pCurl.u.uVel,bindTex(vel.r.t,0));
+    blit(curl);
+
+    gl.useProgram(pVort.p);
+    gl.uniform2fv(pVort.u.uTexel,vel.texel);
+    gl.uniform1f(pVort.u.uEps,14);gl.uniform1f(pVort.u.uDt,dt);
+    gl.uniform1i(pVort.u.uVel,bindTex(vel.r.t,0));
+    gl.uniform1i(pVort.u.uCurl,bindTex(curl.t,1));
+    blit(vel.w);vel.swap();
+
+    gl.useProgram(pDiv.p);
+    gl.uniform2fv(pDiv.u.uTexel,vel.texel);
+    gl.uniform1i(pDiv.u.uVel,bindTex(vel.r.t,0));
+    blit(div);
+
+    gl.useProgram(pJacobi.p);
+    gl.uniform2fv(pJacobi.u.uTexel,vel.texel);
+    gl.uniform1i(pJacobi.u.uDiv,bindTex(div.t,1));
+    for(var i=0;i<22;i++){
+      gl.uniform1i(pJacobi.u.uPress,bindTex(press.r.t,0));
+      blit(press.w);press.swap();
+    }
+
+    gl.useProgram(pGrad.p);
+    gl.uniform2fv(pGrad.u.uTexel,vel.texel);
+    gl.uniform1i(pGrad.u.uPress,bindTex(press.r.t,0));
+    gl.uniform1i(pGrad.u.uVel,bindTex(vel.r.t,1));
+    blit(vel.w);vel.swap();
+
+    gl.useProgram(pAdvect.p);
+    gl.uniform2fv(pAdvect.u.uTexel,vel.texel);
+    gl.uniform1f(pAdvect.u.uDt,dt);
+    gl.uniform1f(pAdvect.u.uDiss,vd);
+    gl.uniform1i(pAdvect.u.uVel,bindTex(vel.r.t,0));
+    gl.uniform1i(pAdvect.u.uSrc,bindTex(vel.r.t,0));
+    blit(vel.w);vel.swap();
+    gl.uniform1f(pAdvect.u.uDiss,dd);
+    gl.uniform1i(pAdvect.u.uVel,bindTex(vel.r.t,0));
+    gl.uniform1i(pAdvect.u.uSrc,bindTex(dye.r.t,1));
+    blit(dye.w);dye.swap();
+
+    gl.useProgram(pShow.p);
+    gl.uniform3fv(pShow.u.uInkA,inkA);
+    gl.uniform3fv(pShow.u.uInkB,inkB);
+    gl.uniform1i(pShow.u.uDark,dark);
+    gl.uniform1i(pShow.u.uDye,bindTex(dye.r.t,0));
+    blit(null);
+
+    requestAnimationFrame(step);
+  }
+
+  var queue=[];
+  return{
+    queue:queue,
+    start:function(){requestAnimationFrame(step);},
+    setRunning:function(v){var was=running;running=v;if(v&&!was){last=performance.now();requestAnimationFrame(step);}},
+    resize:function(){sizes();}
+  };
+})();
+
+if(fluid){
+  var lastPX=null,lastPY=null,inkChan=0,lastSwap=0;
+  function heroUV(e){
+    var r=cv.getBoundingClientRect();
+    return[(e.clientX-r.left)/r.width,1-(e.clientY-r.top)/r.height];
+  }
+  hero.addEventListener("pointermove",function(e){
+    var uv=heroUV(e);
+    if(lastPX!==null){
+      var dx=(uv[0]-lastPX)*W_SPLAT,dy=(uv[1]-lastPY)*W_SPLAT;
+      var sp=Math.min(Math.sqrt(dx*dx+dy*dy)/W_SPLAT*40,1);
+      if(performance.now()-lastSwap>1700){inkChan=1-inkChan;lastSwap=performance.now();}
+      fluid.queue.push([uv[0],uv[1],dx,dy,0.10+sp*0.5,inkChan]);
+    }
+    lastPX=uv[0];lastPY=uv[1];
+  });
+  var W_SPLAT=900;
+  hero.addEventListener("pointerleave",function(){lastPX=lastPY=null;});
+  hero.addEventListener("pointerdown",function(e){
+    var uv=heroUV(e);
+    inkChan=1-inkChan;lastSwap=performance.now();
+    fluid.queue.push([uv[0],uv[1],(Math.random()-0.5)*400,(Math.random()-0.5)*400,1.4,inkChan]);
+  });
+  var rsT;
+  window.addEventListener("resize",function(){clearTimeout(rsT);rsT=setTimeout(fluid.resize,180);});
+  new IntersectionObserver(function(en){fluid.setRunning(en[0].isIntersecting);},{threshold:0})
+    .observe(cv);
+  // opening make-ready: a few strokes so the sheet is never blank
+  for(var si=0;si<7;si++){
+    var a=si/7*6.283;
+    fluid.queue.push([0.5+Math.cos(a)*0.27,0.52+Math.sin(a)*0.2,
+      Math.cos(a+1.7)*260,Math.sin(a+1.7)*260,0.6,si%2]);
+  }
+  fluid.start();
+}else{
+  staticInk();
 }
-hero.addEventListener("pointermove",heroPointer);
-hero.addEventListener("pointerleave",function(){px=-1e4;py=-1e4;if(reduced)drawDots(0);});
-window.addEventListener("resize",function(){buildDots();if(reduced)drawDots(0);});
-new IntersectionObserver(function(en){
-  var was=running;running=en[0].isIntersecting;
-  if(running&&!was&&!reduced)requestAnimationFrame(drawDots);
-},{threshold:0}).observe(cv);
-themeBtn.addEventListener("click",function(){if(reduced)drawDots(0);});
-buildDots();
-if(reduced){drawDots(0);}else{requestAnimationFrame(drawDots);}
 
 /* ---------- reveal on scroll ---------- */
 var io=new IntersectionObserver(function(entries){
@@ -1017,6 +1479,7 @@ async function runPress(){
   if(token!==typeToken)return;
   var dt=((performance.now()-t0)/1000).toFixed(1);
   setStatus('<span class="done">⊕ Proof pulled in '+dt+'s — clean impression</span>');
+  sBell();
   typing=false;runBtn.disabled=false;
   runBtn.innerHTML='<span class="dot"></span> Run again';
 }
@@ -1028,6 +1491,440 @@ var pressIO=new IntersectionObserver(function(en){
   if(en[0].isIntersecting){pressIO.disconnect();setTimeout(runPress,500);}
 },{threshold:0.35});
 pressIO.observe(document.querySelector(".press-machine"));
+
+/* ==========================================================
+   SOUND BENCH — every sound synthesized in-browser. No files.
+   ========================================================== */
+var soundOn=false,actx=null;
+try{soundOn=localStorage.getItem("gl-sound")==="1";}catch(e){}
+var soundBtn=document.getElementById("soundBtn");
+function syncSound(){soundBtn.setAttribute("aria-pressed",soundOn?"true":"false");}
+syncSound();
+function ac(){
+  if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC();}
+  if(actx&&actx.state==="suspended")actx.resume();
+  return actx;
+}
+function noiseSrc(c,dur){
+  var len=Math.max(1,c.sampleRate*dur|0),buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);
+  for(var i=0;i<len;i++)d[i]=Math.random()*2-1;
+  var s=c.createBufferSource();s.buffer=buf;return s;
+}
+function sClack(){ // a metal sort dropping into the stick
+  if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime;
+  var n=noiseSrc(c,0.05),bp=c.createBiquadFilter(),g=c.createGain();
+  bp.type="bandpass";bp.frequency.value=1500+Math.random()*900;bp.Q.value=2.2;
+  g.gain.setValueAtTime(0.16,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+  n.connect(bp).connect(g).connect(c.destination);n.start(t);
+}
+function sThunk(){ // the platen biting the paper
+  if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime;
+  var o=c.createOscillator(),g=c.createGain();
+  o.type="sine";o.frequency.setValueAtTime(115,t);o.frequency.exponentialRampToValueAtTime(48,t+0.16);
+  g.gain.setValueAtTime(0.5,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+  o.connect(g).connect(c.destination);o.start(t);o.stop(t+0.25);
+  var n=noiseSrc(c,0.09),lp=c.createBiquadFilter(),g2=c.createGain();
+  lp.type="lowpass";lp.frequency.value=260;
+  g2.gain.setValueAtTime(0.32,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+0.1);
+  n.connect(lp).connect(g2).connect(c.destination);n.start(t);
+}
+function sBell(){ // the job-done bell above the door
+  if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime;
+  [[587,0.1],[1179,0.045]].forEach(function(p){
+    var o=c.createOscillator(),g=c.createGain();
+    o.type="triangle";o.frequency.value=p[0]*(1+(Math.random()-0.5)*0.004);
+    g.gain.setValueAtTime(p[1],t);g.gain.exponentialRampToValueAtTime(0.0001,t+1.1);
+    o.connect(g).connect(c.destination);o.start(t);o.stop(t+1.2);
+  });
+}
+function sTick(){
+  if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime;
+  var o=c.createOscillator(),g=c.createGain();
+  o.type="square";o.frequency.value=1900;
+  g.gain.setValueAtTime(0.05,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.03);
+  o.connect(g).connect(c.destination);o.start(t);o.stop(t+0.04);
+}
+soundBtn.addEventListener("click",function(){
+  soundOn=!soundOn;
+  try{localStorage.setItem("gl-sound",soundOn?"1":"0");}catch(e){}
+  syncSound();if(soundOn){sClack();}
+});
+runBtn.addEventListener("click",sTick);
+document.querySelector(".letterpress-btn").addEventListener("click",sThunk);
+
+/* ==========================================================
+   THE FOUNDRY — a working press. Types your line in metal,
+   pulls a physical-looking proof, hands you the sheet.
+   ========================================================== */
+var PC=document.getElementById("proofSheet"),pctx=PC.getContext("2d");
+var fInput=document.getElementById("foundryInput"),
+    pullBtn=document.getElementById("pullBtn"),dlBtn=document.getElementById("dlBtn"),
+    roller=document.getElementById("pressRoller");
+var P_PAPER="#FBF9F4",P_INK="#1A1D24",P_BLUE="#0078BF",P_PINK="#FF48B0";
+var inkMode="duo",pullSeed=0x9E3779B9,proofHex="0001";
+function mulberry32(a){
+  return function(){
+    a|=0;a=a+0x6D2B79F5|0;
+    var t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function proofLines(){
+  var s=(fInput.value.trim()||"SET IN FABLE").toUpperCase();
+  if(s.length<=13)return[s];
+  var mid=Math.floor(s.length/2),best=-1;
+  for(var i=0;i<s.length;i++)if(s[i]===" "&&(best<0||Math.abs(i-mid)<Math.abs(best-mid)))best=i;
+  if(best<0)return[s];
+  return[s.slice(0,best),s.slice(best+1)];
+}
+function drawTextPass(lines,size,cy,color,ox,oy,alpha,rnd){
+  pctx.save();
+  pctx.globalCompositeOperation="multiply";
+  pctx.globalAlpha=alpha;
+  pctx.fillStyle=color;
+  pctx.font="900 "+size+"px Fraunces, Georgia, serif";
+  pctx.textBaseline="alphabetic";
+  var lh=size*1.02,W=PC.width;
+  var y0=cy-((lines.length-1)*lh)/2+size*0.35;
+  lines.forEach(function(line,li){
+    var widths=[],total=0;
+    for(var i=0;i<line.length;i++){var w=pctx.measureText(line[i]).width;widths.push(w);total+=w;}
+    var x=(W-total)/2+ox,y=y0+li*lh+oy;
+    for(var i2=0;i2<line.length;i2++){
+      var jx=(rnd()-0.5)*2.4,jy=(rnd()-0.5)*3.4,jr=(rnd()-0.5)*0.022;
+      pctx.save();
+      pctx.translate(x+widths[i2]/2+jx,y+jy);
+      pctx.rotate(jr);
+      pctx.fillText(line[i2],-widths[i2]/2,0);
+      pctx.restore();
+      x+=widths[i2];
+    }
+  });
+  pctx.restore();
+}
+function drawProof(){
+  var W=PC.width,H=PC.height;
+  pctx.setTransform(1,0,0,1,0,0);
+  pctx.globalCompositeOperation="source-over";pctx.globalAlpha=1;
+  pctx.fillStyle=P_PAPER;pctx.fillRect(0,0,W,H);
+  var rnd=mulberry32(pullSeed);
+  // paper fibre
+  for(var i=0;i<2400;i++){
+    pctx.fillStyle="rgba(26,29,36,"+(0.015+rnd()*0.03)+")";
+    pctx.fillRect(rnd()*W,rnd()*H,1+rnd()*1.4,1);
+  }
+  for(var i2=0;i2<700;i2++){
+    pctx.fillStyle="rgba(255,255,255,"+(0.3+rnd()*0.4)+")";
+    pctx.fillRect(rnd()*W,rnd()*H,1,1);
+  }
+  // crop marks
+  pctx.strokeStyle="rgba(26,29,36,.5)";pctx.lineWidth=1.5;
+  [[36,36,1,1],[W-36,36,-1,1],[36,H-36,1,-1],[W-36,H-36,-1,-1]].forEach(function(m){
+    pctx.beginPath();
+    pctx.moveTo(m[0]+10*m[2],m[1]);pctx.lineTo(m[0]+26*m[2],m[1]);
+    pctx.moveTo(m[0],m[1]+10*m[3]);pctx.lineTo(m[0],m[1]+26*m[3]);
+    pctx.stroke();
+  });
+  // registration mark
+  pctx.beginPath();pctx.arc(W-70,84,9,0,6.283);pctx.stroke();
+  pctx.beginPath();pctx.moveTo(W-84,84);pctx.lineTo(W-56,84);pctx.moveTo(W-70,70);pctx.lineTo(W-70,98);pctx.stroke();
+  // header + footer type
+  try{pctx.letterSpacing="5px";}catch(e){}
+  pctx.fillStyle="rgba(26,29,36,.62)";
+  pctx.font="500 17px 'IBM Plex Mono', monospace";
+  pctx.textBaseline="alphabetic";
+  pctx.fillText("GALLEYLABS · HAND-PULLED PROOF",70,92);
+  pctx.strokeStyle="rgba(26,29,36,.18)";pctx.lineWidth=1;
+  pctx.beginPath();pctx.moveTo(70,H-108);pctx.lineTo(W-70,H-108);pctx.stroke();
+  proofHex=(Math.floor(rnd()*65536)).toString(16).toUpperCase().padStart(4,"0");
+  try{pctx.letterSpacing="3px";}catch(e){}
+  pctx.font="500 15px 'IBM Plex Mono', monospace";
+  var foot="PROOF Nº "+proofHex+" · EDITION OF ONE · SET ON THE FABLE 5 PRESS";
+  pctx.fillText(foot,(W-pctx.measureText(foot).width)/2,H-64);
+  try{pctx.letterSpacing="0px";}catch(e){}
+  // ink chips
+  [[P_BLUE,0],[P_PINK,1],[P_INK,2]].forEach(function(cc){
+    pctx.fillStyle=cc[0];pctx.fillRect(70+cc[1]*26,H-148,18,18);
+  });
+  // the line itself — fit, then print each plate
+  var lines=proofLines();
+  pctx.font="900 100px Fraunces, Georgia, serif";
+  var maxw=0;
+  lines.forEach(function(l){maxw=Math.max(maxw,pctx.measureText(l).width);});
+  var size=Math.max(56,Math.min(210,100*(W*0.82)/maxw));
+  var cy=H*0.46;
+  var jseedA=mulberry32(pullSeed+7),jseedB=mulberry32(pullSeed+7); // same jitter, both plates
+  if(inkMode==="duo"){
+    drawTextPass(lines,size,cy,P_BLUE,-7,5,0.92,jseedA);
+    drawTextPass(lines,size,cy,P_PINK,7,-4,0.92,jseedB);
+  }else{
+    var col=inkMode==="blue"?P_BLUE:inkMode==="pink"?P_PINK:P_INK;
+    drawTextPass(lines,size,cy,col,-2.5,1.5,0.85,jseedA);
+    drawTextPass(lines,size,cy,col,2.5,-1.5,0.72,jseedB);
+  }
+  // ink starvation — the roller never coats evenly
+  var rnd2=mulberry32(pullSeed+99);
+  pctx.fillStyle=P_PAPER;
+  var bx=W*0.06,bw=W*0.88,by=cy-size*lines.length*0.75,bh=size*lines.length*1.5;
+  for(var s2=0;s2<900;s2++){
+    pctx.globalAlpha=0.05+rnd2()*0.12;
+    pctx.fillRect(bx+rnd2()*bw,by+rnd2()*bh,1+rnd2()*2.4,1+rnd2()*1.6);
+  }
+  pctx.globalAlpha=1;
+}
+document.querySelectorAll(".ink-pick").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".ink-pick").forEach(function(x){x.setAttribute("aria-checked","false");});
+    b.setAttribute("aria-checked","true");
+    inkMode=b.dataset.ink;sTick();drawProof();
+  });
+});
+var rolling=false;
+function pullProof(){
+  if(rolling)return;rolling=true;
+  pullSeed=(Math.random()*4294967296)>>>0;
+  sThunk();
+  if(reduced){drawProof();dlBtn.disabled=false;rolling=false;return;}
+  roller.classList.add("rolling");
+  setTimeout(drawProof,480);
+  roller.addEventListener("animationend",function done(){
+    roller.classList.remove("rolling");
+    roller.removeEventListener("animationend",done);
+    dlBtn.disabled=false;rolling=false;sBell();
+  });
+}
+pullBtn.addEventListener("click",pullProof);
+fInput.addEventListener("keydown",function(e){
+  if(e.key==="Enter"){pullProof();return;}
+  if(e.key.length===1)sClack();
+});
+dlBtn.addEventListener("click",function(){
+  sTick();
+  PC.toBlob(function(b){
+    if(!b)return;
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(b);
+    a.download="galleylabs-proof-"+proofHex+".png";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+  },"image/png");
+});
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(drawProof);}
+else{setTimeout(drawProof,800);}
+
+/* ==========================================================
+   THE FABLE ENGINE — a combinatorial press. Every edition
+   is set from interchangeable sorts; the count is exact.
+   ========================================================== */
+var FAB={
+  settings:[
+    "a print shop at the edge of winter","the bottom drawer of a type cabinet",
+    "a city that had forgotten how to read","the night shift of a failing newspaper",
+    "a bindery above a bakery","the margin of an unfinished atlas",
+    "a paper mill beside a slow green river","the composing room of a ship's press",
+    "a village with one typewriter and two churches","an attic where the light arrived secondhand"
+  ],
+  prots:[
+    "a worn letter E","an ampersand too ornate for its era","the shop cat, black as fresh ink",
+    "a brass rule bent in an old argument","an apprentice with permanently silver thumbs",
+    "the last wooden press in the province","a proofreader's red pencil","a misprinted map of the sea",
+    "an unsold sonnet","a jar of fluorescent pink","the moon that watched through the skylight",
+    "a page that had never been turned"
+  ],
+  titles:[
+    "the Worn Letter E","the Ornate Ampersand","the Ink-Black Cat","the Bent Brass Rule",
+    "the Silver-Thumbed Apprentice","the Last Wooden Press","the Red Pencil","the Misprinted Map",
+    "the Unsold Sonnet","the Jar of Pink","the Skylight Moon","the Unturned Page"
+  ],
+  flaws:[
+    "was proud, for it had never once smudged","kept a color it had never confessed",
+    "could read everything except itself","believed errors were a kind of weather",
+    "had memorized the dictionary out of loneliness","trusted only what could be measured in picas",
+    "dreamed nightly of wider margins","feared the guillotine at the end of the bench",
+    "collected the letters other words dropped","had been set backwards once, and never forgot it"
+  ],
+  wants:[
+    "to be printed in a sentence that mattered","to see its own reflection in wet ink",
+    "to hold a word too large for its case","to be read aloud, just once, by someone unhurried",
+    "to print one true thing before the ink ran out","to be chosen first, not found last",
+    "to leave the shop and learn what paper came from","to end a war, or at least to start a garden",
+    "to misbehave beautifully, and be forgiven","to matter more than the deadline"
+  ],
+  turns:[
+    "one night the power failed, and the dark began setting its own edition",
+    "a child's letter arrived with no return address",
+    "the new machines came, humming their exact and dreamless hymn",
+    "a flood rose to the second shelf and stopped, as if to read",
+    "an order came in for a book no one dared to set",
+    "the ink ran pink when it should have run black",
+    "a rival shop began printing lies in a beautiful typeface",
+    "the oldest compositor retired, leaving one drawer locked for forty years",
+    "one morning every O in the shop had gone missing",
+    "a poem arrived that refused to fit any measure"
+  ],
+  actions:[
+    "So it worked while the town slept, setting by feel what it could not see.",
+    "It gave away its serif — which is to say, its vanity.",
+    "It let the error stand, and the error turned out to be the truth.",
+    "It leaned into the press one last time, harder than its makers allowed.",
+    "It taught the youngest sort to read upside down and backwards, the honest way.",
+    "It hid the poem inside a shipping manifest, where inspectors never look.",
+    "It spent its whole reservoir of ink on a single, unrepeatable page.",
+    "It confessed the color. The shop went quiet, and then went to work.",
+    "It printed the child's letter a thousand times and pasted one to every window.",
+    "It unbent itself, slowly, over seven ordinary days."
+  ],
+  endings:[
+    "The proof came out imperfect, and the imperfection was the proof.",
+    "When morning came the edition was strange, and the town read every word.",
+    "Nothing was fixed, exactly, but everything afterward was set differently.",
+    "The shop framed the misprint above the door, where the diplomas go.",
+    "It was never chosen first. It was, at last, remembered longest.",
+    "The machines hummed on, but every house kept one hand-pulled page.",
+    "The locked drawer held only a mirror, and that was enough.",
+    "The Os returned in spring, the way lost round things do.",
+    "The war did not end; the garden, however, was planted.",
+    "The page was turned at last, by someone unhurried."
+  ],
+  morals:[
+    "Even the strictest craft keeps a color it has never confessed.",
+    "What is set by hand is read by heart.",
+    "An error honestly kept outlives a thousand corrections.",
+    "The measure of type is not the metal but the impression.",
+    "Vanity is a serif; kindness is the stem.",
+    "Presses break. Editions end. The reading goes on.",
+    "To be legible is good. To be worth reading is better.",
+    "The dark also keeps an edition.",
+    "Small sorts set large words.",
+    "Ink runs out; intention does not.",
+    "A margin is not empty — it is where the reader lives.",
+    "Perfect registration is for machines; forgiveness is for craft."
+  ]
+};
+var F_TOTAL=FAB.settings.length*FAB.prots.length*FAB.flaws.length*FAB.wants.length*
+            FAB.turns.length*FAB.actions.length*FAB.endings.length*FAB.morals.length;
+document.getElementById("fableCount").textContent=F_TOTAL.toLocaleString();
+var fTitle=document.getElementById("fableTitle"),fBody=document.getElementById("fableBody"),
+    fMoral=document.getElementById("fableMoral"),fSeedEl=document.getElementById("fableSeed"),
+    fIndexEl=document.getElementById("fableIndex"),
+    fableBtn=document.getElementById("fableBtn"),fableCopy=document.getElementById("fableCopy");
+var fableText="",fableSeedNow=0;
+function pullFable(seed){
+  fableSeedNow=seed>>>0;
+  var rnd=mulberry32(fableSeedNow);
+  function pick(arr){return Math.floor(rnd()*arr.length);}
+  var iS=pick(FAB.settings),iP=pick(FAB.prots),iF=pick(FAB.flaws),iW=pick(FAB.wants),
+      iT=pick(FAB.turns),iA=pick(FAB.actions),iE=pick(FAB.endings),iM=pick(FAB.morals);
+  var edition=((((((iS*FAB.prots.length+iP)*FAB.flaws.length+iF)*FAB.wants.length+iW)
+      *FAB.turns.length+iT)*FAB.actions.length+iA)*FAB.endings.length+iE)*FAB.morals.length+iM+1;
+  var title="The Fable of "+FAB.titles[iP];
+  var lines=[
+    "In "+FAB.settings[iS]+" there lived "+FAB.prots[iP]+", who "+FAB.flaws[iF]+".",
+    "More than anything, it wanted "+FAB.wants[iW]+".",
+    "Then "+FAB.turns[iT]+".",
+    FAB.actions[iA],
+    FAB.endings[iE]
+  ];
+  var moral="Moral — "+FAB.morals[iM];
+  fTitle.innerHTML="";fBody.innerHTML="";fMoral.textContent="";
+  var d=0;
+  var tEl=document.createElement("span");
+  tEl.className="fable-line fl";tEl.style.setProperty("--fd",(d+=0.05)+"s");tEl.textContent=title;
+  fTitle.appendChild(tEl);
+  lines.forEach(function(l){
+    var p=document.createElement("p");
+    p.className="fable-line";p.style.setProperty("--fd",(d+=0.22)+"s");p.textContent=l;
+    fBody.appendChild(p);
+  });
+  fMoral.className="fable-moral mono fable-line";
+  fMoral.style.setProperty("--fd",(d+=0.3)+"s");
+  fMoral.textContent=moral;
+  fSeedEl.textContent="SEED 0x"+fableSeedNow.toString(16).toUpperCase().padStart(8,"0");
+  fIndexEl.textContent="EDITION "+edition.toLocaleString()+" OF "+F_TOTAL.toLocaleString();
+  fableText=title+"\n\n"+lines.join("\n")+"\n\n"+moral+
+    "\n\n— set by the GalleyLabs Fable Engine on the Fable 5 press, seed 0x"+
+    fableSeedNow.toString(16).toUpperCase().padStart(8,"0");
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    document.querySelectorAll(".fable-line").forEach(function(el){el.classList.add("set");});
+  });});
+}
+fableBtn.addEventListener("click",function(){
+  sBell();
+  pullFable((Math.random()*4294967296)>>>0);
+});
+fableCopy.addEventListener("click",function(){
+  var done=function(){
+    var old=fableCopy.textContent;
+    fableCopy.textContent="Copied ✓";
+    setTimeout(function(){fableCopy.textContent=old;},1600);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(fableText).then(done,done);
+  }else{done();}
+  sTick();
+});
+pullFable(0x5EED0F5);
+
+/* ==========================================================
+   THE JOB TICKET — a command palette for the whole shop.
+   ========================================================== */
+var cmdk=document.getElementById("cmdk"),cmdkInput=document.getElementById("cmdkInput"),
+    cmdkList=document.getElementById("cmdkList"),cmdkSel=0;
+function go(sel){var el=document.querySelector(sel);if(el)el.scrollIntoView({behavior:reduced?"auto":"smooth"});}
+var CMDS=[
+  {t:"Run the press",k:"proof nº 02",fn:function(){go("#press");setTimeout(runPress,700);}},
+  {t:"Set your own proof",k:"proof nº 03",fn:function(){go("#foundry");setTimeout(function(){fInput.focus();},700);}},
+  {t:"Pull a fresh fable",k:"proof nº 04",fn:function(){go("#fables");setTimeout(function(){fableBtn.click();},600);}},
+  {t:"Browse the specimens",k:"proof nº 05",fn:function(){go("#specimens");}},
+  {t:"Check the ink densities",k:"proof nº 06",fn:function(){go("#density");}},
+  {t:"Download your proof sheet",k:"export",fn:function(){go("#foundry");setTimeout(function(){if(!dlBtn.disabled)dlBtn.click();else pullProof();},700);}},
+  {t:"Toggle light / dark ink",k:"theme",fn:function(){themeBtn.click();}},
+  {t:"Toggle press sounds",k:"audio",fn:function(){soundBtn.click();}},
+  {t:"Read the colophon",k:"end matter",fn:function(){go("#colophon");}},
+  {t:"Back to the frontispiece",k:"top",fn:function(){go("#top");}}
+];
+var cmdkItems=[];
+function renderCmdk(){
+  var q=cmdkInput.value.trim().toLowerCase();
+  cmdkList.innerHTML="";cmdkItems=[];
+  CMDS.forEach(function(c){
+    if(q&&c.t.toLowerCase().indexOf(q)<0&&c.k.toLowerCase().indexOf(q)<0)return;
+    var li=document.createElement("li");
+    li.setAttribute("role","option");
+    li.innerHTML="<span>"+c.t+"</span><span class='k'>"+c.k+"</span>";
+    li.addEventListener("click",function(){runCmd(c);});
+    li.addEventListener("pointerenter",function(){cmdkSel=cmdkItems.indexOf(li);paintSel();});
+    cmdkList.appendChild(li);cmdkItems.push(li);li._cmd=c;
+  });
+  cmdkSel=0;paintSel();
+}
+function paintSel(){
+  cmdkItems.forEach(function(li,i){li.setAttribute("aria-selected",i===cmdkSel?"true":"false");});
+  if(cmdkItems[cmdkSel])cmdkItems[cmdkSel].scrollIntoView({block:"nearest"});
+}
+function runCmd(c){closeCmdk();setTimeout(c.fn,60);}
+function openCmdk(){
+  cmdk.hidden=false;cmdkInput.value="";renderCmdk();
+  sTick();setTimeout(function(){cmdkInput.focus();},30);
+}
+function closeCmdk(){cmdk.hidden=true;}
+document.getElementById("cmdkBtn").addEventListener("click",openCmdk);
+document.getElementById("noteCmdk").addEventListener("click",openCmdk);
+document.getElementById("cmdkScrim").addEventListener("click",closeCmdk);
+cmdkInput.addEventListener("input",renderCmdk);
+window.addEventListener("keydown",function(e){
+  if((e.metaKey||e.ctrlKey)&&(e.key==="k"||e.key==="K")){
+    e.preventDefault();
+    if(cmdk.hidden)openCmdk();else closeCmdk();
+    return;
+  }
+  if(cmdk.hidden)return;
+  if(e.key==="Escape"){closeCmdk();}
+  else if(e.key==="ArrowDown"){e.preventDefault();cmdkSel=Math.min(cmdkSel+1,cmdkItems.length-1);paintSel();sClack();}
+  else if(e.key==="ArrowUp"){e.preventDefault();cmdkSel=Math.max(cmdkSel-1,0);paintSel();sClack();}
+  else if(e.key==="Enter"&&cmdkItems[cmdkSel]){runCmd(cmdkItems[cmdkSel]._cmd);}
+});
 })();
 </script>
 

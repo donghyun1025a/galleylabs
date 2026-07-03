@@ -8,13 +8,28 @@ A single-file showcase site for **GalleyLabs × Fable 5**, designed as a living
 GalleyLabs takes its name from the galley proof, so the whole page borrows the
 language of the composing room:
 
-- **Crop marks & a registration strip** frame the viewport like a proof sheet.
-- **A risograph duotone** (riso blue `#0078BF` + fluorescent pink `#FF48B0`)
-  overprints the hero headline with a live misregistration effect — move the
-  cursor and the ink plates shift.
+- **Live ink physics.** The hero's ink is a real fluid — a Navier–Stokes
+  solver written from scratch in raw WebGL2 (semi-Lagrangian advection,
+  vorticity confinement, Jacobi pressure projection), running on your GPU.
+  Two ink channels composite subtractively on paper in light mode and
+  additively in the dark. Drag through it. Falls back to a static wash when
+  WebGL2 or motion isn't available.
+- **Crop marks & a registration strip** frame the viewport like a proof
+  sheet, and the headline overprints with live misregistration parallax.
 - **The Press** is an interactive demo: pick a manuscript (Reason / Compose /
   Build) and watch Fable 5 set it — extended thinking first, then ink. The
   Build job streams real CSS and then renders the working result.
+- **The Foundry** is a working press: type any line, choose your inks, and
+  pull a proof. It prints to canvas with plate misregistration, per-sort
+  jitter, ink starvation, and paper grain — every pull unique — then lets
+  you download the sheet as a PNG poster.
+- **The Fable Engine** sets one of **144,000,000** distinct fables from a
+  case of interchangeable sorts (seeded PRNG, exact mixed-radix edition
+  numbering). Pull the lever; that edition is yours alone.
+- **The Job Ticket** (⌘K / Ctrl+K) is a command palette for the whole shop.
+- **Press sounds** — the sort-clack, the platen thunk, the job-done bell —
+  are synthesized in-browser with the Web Audio API. No audio files. Off by
+  default; toggle in the header.
 - **Specimens** present six capabilities as type-specimen cards with hover
   micro-interactions.
 - **The Densitometer** measures "ink density" — an illustrative benchmark
