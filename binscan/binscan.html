@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b1016">
+<title>BinScan</title>
+<style>
+/* Layout: single-screen field tool. Dark only (glare in cabin). Video fills, controls float at bottom. */
+:root{
+  --bg:#0b1016; --panel:#121a24; --panel2:#1a2432; --line:#243040;
+  --fg:#e8eef5; --mute:#8fa0b3; --accent:#4cc3ff; --ok:#39d98a; --warn:#ffb347; --bad:#ff3b4a;
+  --font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--font);-webkit-text-size-adjust:100%;overflow:hidden}
+button{font:inherit;color:inherit;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;min-height:46px}
+button:active{filter:brightness(1.25)}
+button.primary{background:var(--accent);color:#06131c;border-color:transparent;font-weight:700}
+button.danger{background:var(--bad);color:#fff;border-color:transparent;font-weight:700}
+button.ghost{background:transparent}
+button[disabled]{opacity:.45;pointer-events:none}
+input{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:46px}
+input[type=range]{width:100%;min-height:auto;padding:0;background:transparent;border:0}
+.num{font-variant-numeric:tabular-nums}
+#app{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+header{display:flex;align-items:center;gap:10px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+header .brand{font-weight:800;letter-spacing:.04em}
+header .brand small{color:var(--mute);font-weight:500;margin-left:6px}
+.badge{font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.badge.on{color:var(--ok);border-color:var(--ok)}
+header .spacer{flex:1}
+section{display:none;flex:1;min-height:0;flex-direction:column}
+section.active{display:flex}
+.pad{padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 auto;min-width:0}
+h1{font-size:22px;margin:0;text-wrap:balance}
+h2{font-size:13px;margin:0;color:var(--mute);text-transform:uppercase;letter-spacing:.1em}
+p{margin:0;color:var(--mute)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.card b{font-size:17px}
+.modebtn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;min-height:72px}
+.modebtn small{color:var(--mute);font-weight:400}
+/* stage */
+.stage{position:relative;flex:1;min-height:0;background:#000;overflow:hidden}
+.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.stage canvas{pointer-events:none}
+.stage.alarm{box-shadow:inset 0 0 0 8px var(--bad)}
+.hud{position:absolute;left:0;right:0;top:0;display:flex;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));font-size:12px;color:var(--mute);pointer-events:none}
+.hud span{background:rgba(11,16,22,.75);padding:4px 8px;border-radius:8px}
+.hud .score{color:var(--fg)}
+.banner{position:absolute;left:0;right:0;bottom:0;padding:14px;text-align:center;font-weight:800;font-size:20px;background:var(--bad);color:#fff;display:none}
+.banner.show{display:block}
+.banner.calib{background:var(--accent);color:#06131c}
+.controls{display:flex;flex-direction:column;gap:8px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--panel);border-top:1px solid var(--line)}
+.code{font-size:44px;font-weight:800;letter-spacing:.2em;text-align:center;font-variant-numeric:tabular-nums}
+.status{font-size:13px;color:var(--mute);text-align:center}
+.status.ok{color:var(--ok)}
+.status.bad{color:var(--bad)}
+.log{max-height:28vh;overflow:auto;font-size:13px;border-top:1px solid var(--line)}
+.log div{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.log .t{color:var(--mute);flex:0 0 auto}
+.drawer{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:20}
+.drawer.open{display:flex}
+.sheet{background:var(--panel);border-radius:18px 18px 0 0;width:100%;max-height:85%;overflow:auto;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;color:var(--mute);display:flex;justify-content:space-between}
+.lock{color:var(--warn);font-size:12px}
+.hidden{display:none!important}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--mute)}
+.kv dd{margin:0}
+details summary{cursor:pointer;color:var(--mute);font-size:13px}
+button.seg.primary{pointer-events:none}
+#syncBadge{display:none}
+#syncBadge.show{display:inline}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="brand">BinScan<small>오버헤드빈 검색 보조</small></div>
+  <div class="spacer"></div>
+  <span class="badge" id="syncBadge">☁ 0</span>
+  <span class="badge" id="peerBadge">오프라인</span>
+  <button class="ghost" id="btnHome" style="min-height:36px;padding:6px 10px">홈</button>
+</header>
+
+<!-- HOME -->
+<section id="home" class="active">
+  <div class="pad stack">
+    <h1>어느 폰으로 쓰나요?</h1>
+    <p>두 폰이 같은 Wi-Fi나 핫스팟에 있어야 합니다. 영상은 폰끼리 직접 전송되고 저장되지 않습니다.</p>
+    <button class="modebtn" id="goCam">📷 카메라 폰 <small>셀카봉 끝에 거치. 영상과 플래시를 송출합니다.</small></button>
+    <div class="card">
+      <b>👀 뷰어 폰</b>
+      <small style="color:var(--mute)">손에 드는 폰. 카메라 폰 화면의 4자리 코드를 입력하세요.</small>
+      <div class="row">
+        <input id="codeIn" inputmode="numeric" maxlength="4" placeholder="4자리 코드" class="num" style="font-size:20px;letter-spacing:.2em;text-align:center">
+        <button class="primary" id="goView" style="flex:0 0 auto">연결</button>
+      </div>
+    </div>
+    <button class="modebtn" id="goSolo">🧪 단독 테스트 <small>폰 한 대로 카메라와 감지를 같이 돌립니다. 책상에서 튜닝할 때.</small></button>
+    <details>
+      <summary>사용 순서 / 주의</summary>
+      <div class="stack" style="padding-top:8px">
+        <p>1. 카메라 폰: "카메라 폰" 선택 → 코드 표시 → 셀카봉에 거치.</p>
+        <p>2. 뷰어 폰: 코드 입력 후 연결.</p>
+        <p>3. 뷰어에서 <b style="color:var(--fg)">보정</b>: 눈으로 확인한 빈 오버헤드빈 1~2개를 8초간 천천히 쓸어 찍습니다. 이게 그 기체의 정상 기준이 됩니다.</p>
+        <p>4. <b style="color:var(--fg)">검색 시작</b> 후 실제 검색과 같은 속도로 쓸어갑니다. 기준과 다른 덩어리가 보이면 진동·소리·빨간 테두리.</p>
+        <p>보조 장비입니다. 알림이 없어도 화면을 직접 확인하세요. 기록은 점수만 남고 영상은 저장되지 않습니다.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- CAMERA PHONE -->
+<section id="cam">
+  <div class="stage" id="camStage">
+    <video id="camVideo" autoplay muted playsinline></video>
+    <div class="hud"><span id="camRes">—</span><span id="camTorch">플래시 꺼짐</span></div>
+    <div class="banner" id="camBanner">⚠ 이물질 의심</div>
+  </div>
+  <div class="controls">
+    <div class="code" id="camCode">----</div>
+    <div class="status" id="camStatus">카메라 준비 중</div>
+    <div class="row">
+      <button id="btnTorch">🔦 플래시</button>
+      <button id="btnFlip">카메라 전환</button>
+      <button class="danger" id="btnCamEnd" style="flex:0 0 auto">종료</button>
+    </div>
+  </div>
+</section>
+
+<!-- VIEWER / SOLO -->
+<section id="view">
+  <div class="stage" id="viewStage">
+    <video id="viewVideo" autoplay muted playsinline></video>
+    <canvas id="overlay"></canvas>
+    <div class="hud">
+      <span class="score num" id="hudScore">점수 —</span>
+      <span class="num" id="hudThr">기준 —</span>
+      <span class="num" id="hudFps">— fps</span>
+      <span id="hudBlur" class="hidden">흔들림</span>
+    </div>
+    <div class="banner" id="viewBanner">⚠ 이물질 의심</div>
+  </div>
+  <div class="controls">
+    <div class="status" id="viewStatus">연결 대기</div>
+    <div class="row">
+      <button id="btnCalib" class="primary">① 보정 (빈 상태 8초)</button>
+      <button id="btnScan" disabled>② 검색 시작</button>
+    </div>
+    <div class="row">
+      <button id="btnHeat">히트맵</button>
+      <button id="btnMute">🔔 소리</button>
+      <button id="btnNormal" disabled>정상 등록</button>
+      <button id="btnSettings">⚙ 설정</button>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="row">
+      <button class="ghost" id="btnExport">기록 복사 (CSV)</button>
+      <button class="ghost" id="btnClear">기록 지우기</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- SETTINGS -->
+<div class="drawer" id="drawer">
+  <div class="sheet">
+    <h2>탐지 설정</h2>
+    <div class="field">
+      <label><span>여유 배수 (낮을수록 민감)</span><span class="num" id="marginVal">1.50</span></label>
+      <input type="range" id="margin" min="1.0" max="3.0" step="0.05" value="1.5">
+      <span class="lock" id="lockNote"></span>
+    </div>
+    <div class="field">
+      <label><span>최소 덩어리 (패치 수)</span><span class="num" id="minClVal">2</span></label>
+      <input type="range" id="minCl" min="1" max="6" step="1" value="2">
+    </div>
+    <div class="field">
+      <label><span>시간 연속성 (최근 4프레임 중 N회)</span><span class="num" id="persistVal">2</span></label>
+      <input type="range" id="persist" min="1" max="4" step="1" value="2">
+    </div>
+    <div class="field">
+      <label><span>가장자리 1칸 무시</span><input type="checkbox" id="ignoreEdge" style="min-height:auto"></label>
+    </div>
+    <div class="field">
+      <label><span>흔들림 프레임 제외</span><input type="checkbox" id="blurSkip" checked style="min-height:auto"></label>
+    </div>
+    <h2>감독자</h2>
+    <div class="row">
+      <button id="btnLock">🔒 현재 배수를 상한으로 잠금</button>
+      <button id="btnUnlock">🔓 잠금 해제 (PIN)</button>
+    </div>
+    <div class="field">
+      <label><span>PIN 변경 (기본 0000)</span></label>
+      <div class="row"><input id="pinNew" inputmode="numeric" maxlength="6" placeholder="새 PIN"><button id="btnPin" style="flex:0 0 auto">저장</button></div>
+    </div>
+    <h2>전송 (Supabase)</h2>
+    <div class="field"><label><span>전송 켜기</span><input type="checkbox" id="upOn" style="min-height:auto"></label></div>
+    <div class="field"><label><span>프로젝트 URL</span></label><input id="upUrl" placeholder="https://xxxx.supabase.co" autocapitalize="off"></div>
+    <div class="field"><label><span>anon 키</span></label><input id="upKey" placeholder="eyJ…" autocapitalize="off"></div>
+    <div class="field"><label><span>기기 이름 (누가 찍었는지)</span></label><input id="upDev" placeholder="예: ICN-뷰어1"></div>
+    <div class="field">
+      <label><span>영상 전송</span></label>
+      <div class="row">
+        <button class="seg" data-v="off" id="clipOff">끔</button>
+        <button class="seg" data-v="alarm" id="clipAlarm">알림 클립만</button>
+        <button class="seg" data-v="all" id="clipAll">전체 세션</button>
+      </div>
+      <span class="lock" id="clipNote">알림 클립: 알림 전후 최대 20초 구간만 올립니다. 전체 세션: 10초 단위로 계속 올립니다.</span>
+    </div>
+    <div class="field"><label><span>전송 상태</span><span id="upState">—</span></label></div>
+    <h2>보정 상태</h2>
+    <dl class="kv" id="calibInfo"><dt>기준 저장소</dt><dd>없음</dd></dl>
+    <button id="btnCloseSettings" class="primary">닫기</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const PREFIX = 'btbinscan-';
+
+/* ---------- state ---------- */
+const S = {
+  mode: null, peer: null, conn: null, call: null,
+  localStream: null, facing: 'environment', torch: false,
+  running: false, calibrating: false, heat: false, mute: false,
+  settings: { margin: 1.5, minCl: 2, persist: 2, ignoreEdge: false, blurSkip: true, lockMax: null, pin: '0000',
+              upOn: false, upUrl: '', upKey: '', upDev: '', clipMode: 'alarm' },
+  log: [], lastAlarm: 0, audio: null, wake: null, session: null, alarmCount: 0,
+};
+try { Object.assign(S.settings, JSON.parse(localStorage.getItem('binscan.settings') || '{}')); } catch (e) {}
+const saveSettings = () => { try { localStorage.setItem('binscan.settings', JSON.stringify(S.settings)); } catch (e) {} };
+
+/* ---------- upload: events + clips to Supabase (queued, retried, survives reload) ---------- */
+const UP = {
+  q: [], busy: false, sent: 0, failed: 0,
+  load() { try { this.q = JSON.parse(localStorage.getItem('binscan.queue') || '[]'); } catch (e) { this.q = []; } this.badge(); },
+  save() { try { localStorage.setItem('binscan.queue', JSON.stringify(this.q.filter(x => x.kind === 'event'))); } catch (e) {} },
+  enabled() { const s = S.settings; return s.upOn && /^https:\/\/.+/.test(s.upUrl) && s.upKey.length > 20; },
+  headers(extra) { const s = S.settings; return Object.assign({ apikey: s.upKey, Authorization: 'Bearer ' + s.upKey }, extra || {}); },
+  badge() { const n = this.q.length; const b = $('syncBadge'); b.textContent = '☁ ' + (this.busy ? '↑' : '') + n; b.classList.toggle('show', this.enabled()); b.classList.toggle('on', n === 0 && this.failed === 0); $('upState').textContent = `보냄 ${this.sent} · 대기 ${n} · 실패 ${this.failed}`; },
+  event(type, data, clipPath) {
+    if (!this.enabled()) return;
+    this.q.push({ kind: 'event', body: { session_id: (data && data.session) || S.session, device: S.settings.upDev || null, mode: S.mode, type, ts: new Date().toISOString(), data: data || {}, clip_path: clipPath || null, margin: S.settings.margin } });
+    this.save(); this.badge(); this.pump();
+  },
+  clip(blob, path, meta) { if (!this.enabled() || !blob || !blob.size) return; this.q.push({ kind: 'clip', blob, path, meta }); this.badge(); this.pump(); },
+  async pump() {
+    if (this.busy || !this.q.length || !this.enabled()) return; this.busy = true; this.badge();
+    const s = S.settings, base = s.upUrl.replace(/\/$/, '');
+    while (this.q.length) {
+      const it = this.q[0];
+      try {
+        if (it.kind === 'event') {
+          const r = await fetch(base + '/rest/v1/binscan_events', { method: 'POST', headers: this.headers({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), body: JSON.stringify(it.body) });
+          if (!r.ok) throw new Error('event ' + r.status);
+        } else {
+          const r = await fetch(base + '/storage/v1/object/binscan-clips/' + it.path, { method: 'POST', headers: this.headers({ 'Content-Type': it.blob.type || 'video/webm' }), body: it.blob });
+          if (!r.ok && r.status !== 409) throw new Error('clip ' + r.status);
+          this.q.shift(); this.sent++; this.save();
+          this.event('clip', Object.assign({ bytes: it.blob.size, mime: it.blob.type }, it.meta || {}), it.path); continue;
+        }
+        this.q.shift(); this.sent++; this.failed = 0; this.save();
+      } catch (e) {
+        this.failed++; this.badge(); if (!navigator.onLine || this.failed < 3) { setTimeout(() => { this.busy = false; this.pump(); }, 5000 * this.failed); return; }
+        // give up on this item after repeated failures (keeps the queue moving); events are kept at the back for a later retry
+        const bad = this.q.shift(); if (bad.kind === 'event') this.q.push(bad); this.failed = 0; this.save();
+      }
+      this.badge();
+    }
+    this.busy = false; this.badge();
+  }
+};
+window.addEventListener('online', () => UP.pump());
+
+/* clip recorder: self-contained 10 s segments; alarm uploads previous + current segment */
+const REC = {
+  rec: null, cur: [], prev: null, prevPath: null, seg: 0, markCur: false, timer: null, stream: null,
+  mime() { for (const m of ['video/webm;codecs=vp8', 'video/webm', 'video/mp4']) if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; },
+  start(stream) {
+    this.stop(); if (!window.MediaRecorder || !stream || S.settings.clipMode === 'off' || !UP.enabled()) return;
+    this.stream = stream; this.sid = S.session; this.seg = 0; this.prev = null; this.cycle();
+  },
+  cycle() {
+    const m = this.mime(); let r; try { r = new MediaRecorder(this.stream, m ? { mimeType: m, videoBitsPerSecond: 1200000 } : undefined); } catch (e) { return; }
+    this.rec = r; this.cur = []; this.markCur = S.settings.clipMode === 'all'; const segNo = ++this.seg;
+    r.ondataavailable = e => { if (e.data && e.data.size) this.cur.push(e.data); };
+    r.onstop = () => {
+      const blob = new Blob(this.cur, { type: m || 'video/webm' }); const path = `${this.sid}/seg-${String(segNo).padStart(4, '0')}.${(m || 'webm').includes('mp4') ? 'mp4' : 'webm'}`;
+      if (this.markCur) UP.clip(blob, path, { segment: segNo, session: this.sid }); else { this.prev = blob; this.prevPath = path; }
+      if (S.mode && this.stream.active) this.cycle();
+    };
+    r.start(1000); this.timer = setTimeout(() => { try { r.stop(); } catch (e) {} }, 10000);
+  },
+  onAlarm() {
+    if (!this.rec) return;
+    if (this.prev && !this.markCur) { UP.clip(this.prev, this.prevPath, { segment: this.seg - 1, preroll: true, session: this.sid }); this.prev = null; }
+    this.markCur = true;
+  },
+  stop() { clearTimeout(this.timer); if (this.rec && this.rec.state !== 'inactive') { const r = this.rec; this.rec = null; try { r.stop(); } catch (e) {} } this.rec = null; }
+};
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+function beginSession() { S.session = uuid(); S.alarmCount = 0; UP.event('session_start', { ua: navigator.userAgent, settings: { minCl: S.settings.minCl, persist: S.settings.persist, ignoreEdge: S.settings.ignoreEdge, blurSkip: S.settings.blurSkip, lockMax: S.settings.lockMax } }); }
+function endSession() { if (S.session) UP.event('session_end', { alarms: S.alarmCount, log: S.log.slice(0, 200).map(e => ({ t: e.t, ratio: e.ratio, cell: e.cell, size: e.size })) }); REC.stop(); }
+
+/* ---------- detection engine (data-free, calibrate on site) ---------- */
+const AW = 192, AH = 144, P = 12, GW = AW / P, GH = AH / P, D = 11;
+const ENG = {
+  bank: null, mean: null, std: null, thr: null, colorThr: null, colorRef: null,
+  blurRef: null, frames: [], history: [], hold: null,
+  reset() { this.bank = this.mean = this.std = this.thr = this.colorThr = this.colorRef = this.blurRef = null; this.frames = []; this.history = []; }
+};
+const acan = document.createElement('canvas'); acan.width = AW; acan.height = AH;
+const actx = acan.getContext('2d', { willReadFrequently: true });
+const lum = new Float32Array(AW * AH);
+
+// patch features: mean RGB, chroma a/b, lum std, gradient mean, 4-bin orientation histogram
+function extract(img) {
+  const d = img.data, feats = new Float32Array(GW * GH * D);
+  for (let i = 0, j = 0; i < lum.length; i++, j += 4) lum[i] = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+  let lapSum = 0, lapSq = 0, lapN = 0;
+  for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
+    let r = 0, g = 0, b = 0, l = 0, l2 = 0, gm = 0, n = 0; const h = [0, 0, 0, 0];
+    for (let y = gy * P; y < gy * P + P; y++) for (let x = gx * P; x < gx * P + P; x++) {
+      const i = y * AW + x, j = i * 4;
+      r += d[j]; g += d[j + 1]; b += d[j + 2]; l += lum[i]; l2 += lum[i] * lum[i]; n++;
+      if (x > 0 && x < AW - 1 && y > 0 && y < AH - 1) {
+        const dx = lum[i + 1] - lum[i - 1], dy = lum[i + AW] - lum[i - AW];
+        const m = Math.sqrt(dx * dx + dy * dy); gm += m;
+        if (m > 4) { const a = Math.atan2(dy, dx); h[((Math.round(a / (Math.PI / 4)) % 4) + 4) % 4] += m; }
+        const lap = 4 * lum[i] - lum[i + 1] - lum[i - 1] - lum[i + AW] - lum[i - AW]; lapSum += lap; lapSq += lap * lap; lapN++;
+      }
+    }
+    const k = (gy * GW + gx) * D, mr = r / n, mg = g / n, mb = b / n, ml = l / n;
+    const hs = h[0] + h[1] + h[2] + h[3] + 1e-3;
+    feats[k] = mr / 255; feats[k + 1] = mg / 255; feats[k + 2] = mb / 255;
+    feats[k + 3] = (mr - mg) / 255; feats[k + 4] = (mb - (mr + mg) / 2) / 255;
+    feats[k + 5] = Math.sqrt(Math.max(0, l2 / n - ml * ml)) / 64;
+    feats[k + 6] = gm / n / 64;
+    feats[k + 7] = h[0] / hs; feats[k + 8] = h[1] / hs; feats[k + 9] = h[2] / hs; feats[k + 10] = h[3] / hs;
+  }
+  const sharp = lapSq / lapN - (lapSum / lapN) ** 2;
+  return { feats, sharp };
+}
+function normalize(feats) { const o = new Float32Array(feats.length); for (let i = 0; i < feats.length; i++) { const k = i % D; o[i] = (feats[i] - ENG.mean[k]) / ENG.std[k]; } return o; }
+function knnScores(nf) {
+  const bank = ENG.bank, nb = bank.length / D, out = new Float32Array(GW * GH);
+  for (let p = 0; p < GW * GH; p++) {
+    const q = p * D; let best = Infinity;
+    for (let b = 0; b < nb; b++) {
+      const o = b * D; let s = 0;
+      for (let k = 0; k < D; k++) { const t = nf[q + k] - bank[o + k]; s += t * t; if (s >= best) break; }
+      if (s < best) best = s;
+    }
+    out[p] = Math.sqrt(best);
+  }
+  return out;
+}
+function colorScores(feats) { const out = new Float32Array(GW * GH); for (let p = 0; p < GW * GH; p++) { const q = p * D; const a = feats[q + 3] - ENG.colorRef[0], b = feats[q + 4] - ENG.colorRef[1], l = (feats[q] + feats[q + 1] + feats[q + 2]) / 3 - ENG.colorRef[2]; out[p] = Math.sqrt(a * a + b * b + 0.25 * l * l); } return out; }
+function smooth3(m) { const o = new Float32Array(m.length); for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) { let s = 0, n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < GW && yy < GH) { s += m[yy * GW + xx]; n++; } } o[y * GW + x] = s / n; } return o; }
+function quantile(arr, q) { const a = Float32Array.from(arr).sort(); return a[Math.min(a.length - 1, Math.floor(q * a.length))]; }
+function components(bin) { // 4-connected clusters, returns array of {size, cells}
+  const seen = new Uint8Array(bin.length), comps = [];
+  for (let i = 0; i < bin.length; i++) if (bin[i] && !seen[i]) {
+    const cells = [], st = [i]; seen[i] = 1;
+    while (st.length) { const c = st.pop(); cells.push(c); const x = c % GW, y = (c / GW) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= GW || yy >= GH) continue; const n = yy * GW + xx; if (bin[n] && !seen[n]) { seen[n] = 1; st.push(n); } } }
+    comps.push({ size: cells.length, cells });
+  }
+  return comps;
+}
+
+function finishCalibration() {
+  const fr = ENG.frames; if (fr.length < 8) return false;
+  const nHold = Math.max(2, Math.floor(fr.length * 0.25)), train = fr.slice(0, fr.length - nHold), hold = fr.slice(fr.length - nHold);
+  // per-dim mean/std
+  const mean = new Float32Array(D), std = new Float32Array(D); let cnt = 0;
+  for (const f of train) for (let i = 0; i < f.feats.length; i++) { mean[i % D] += f.feats[i]; } cnt = train.length * GW * GH;
+  for (let k = 0; k < D; k++) mean[k] /= cnt;
+  for (const f of train) for (let i = 0; i < f.feats.length; i++) { const t = f.feats[i] - mean[i % D]; std[i % D] += t * t; }
+  for (let k = 0; k < D; k++) std[k] = Math.sqrt(std[k] / cnt) + 1e-3;
+  ENG.mean = mean; ENG.std = std;
+  // bank: random subsample of normalized train patches (coreset-lite)
+  const all = []; for (const f of train) { const nf = normalize(f.feats); for (let p = 0; p < GW * GH; p++) all.push(nf.subarray(p * D, p * D + D)); }
+  const N = Math.min(2500, all.length); for (let i = all.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [all[i], all[j]] = [all[j], all[i]]; }
+  const bank = new Float32Array(N * D); for (let i = 0; i < N; i++) bank.set(all[i], i * D); ENG.bank = bank;
+  // color reference: median chroma/lum of train patches
+  const ca = [], cb = [], cl = []; for (const f of train) for (let p = 0; p < GW * GH; p++) { const q = p * D; ca.push(f.feats[q + 3]); cb.push(f.feats[q + 4]); cl.push((f.feats[q] + f.feats[q + 1] + f.feats[q + 2]) / 3); }
+  ENG.colorRef = [quantile(ca, 0.5), quantile(cb, 0.5), quantile(cl, 0.5)];
+  // hold-out score distribution -> base thresholds (margin applied at scan time)
+  const hs = [], cs = []; for (const f of hold) { const s = smooth3(knnScores(normalize(f.feats))); for (const v of s) hs.push(v); const c = colorScores(f.feats); for (const v of c) cs.push(v); }
+  ENG.thr = quantile(hs, 0.995); ENG.colorThr = quantile(cs, 0.995) + 0.02;
+  ENG.blurRef = quantile(fr.map(f => f.sharp), 0.5);
+  ENG.history = [];
+  return true;
+}
+
+/* ---------- viewer loop ---------- */
+const ov = $('overlay'), octx = ov.getContext('2d');
+let lastT = 0, fpsAcc = 0, fpsN = 0;
+function loop(ts) {
+  if (S.mode !== 'view' && S.mode !== 'solo') return;
+  requestAnimationFrame(loop);
+  const v = $('viewVideo'); if (!v.videoWidth) return;
+  if (ts - lastT < 90) return; // ~10 fps
+  fpsAcc += ts - lastT; fpsN++; if (fpsN >= 10) { $('hudFps').textContent = Math.round(1000 / (fpsAcc / fpsN)) + ' fps'; fpsAcc = 0; fpsN = 0; }
+  lastT = ts;
+  actx.drawImage(v, 0, 0, AW, AH);
+  const { feats, sharp } = extract(actx.getImageData(0, 0, AW, AH));
+  if (S.calibrating) { ENG.frames.push({ feats, sharp }); $('viewStatus').textContent = `보정 중… ${ENG.frames.length}프레임 수집 (천천히 쓸어가세요)`; return; }
+  if (!S.running || !ENG.bank) return;
+  const blurry = S.settings.blurSkip && sharp < ENG.blurRef * 0.3;
+  $('hudBlur').classList.toggle('hidden', !blurry);
+  if (blurry) return;
+  const m = S.settings.margin, thr = ENG.thr * m, cthr = ENG.colorThr * m;
+  const kn = smooth3(knnScores(normalize(feats))), cs = colorScores(feats);
+  const bin = new Uint8Array(GW * GH); let maxRatio = 0, maxCell = 0;
+  for (let p = 0; p < bin.length; p++) {
+    const x = p % GW, y = (p / GW) | 0;
+    if (S.settings.ignoreEdge && (x === 0 || y === 0 || x === GW - 1 || y === GH - 1)) continue;
+    const r = Math.max(kn[p] / thr, cs[p] / cthr); if (r > maxRatio) { maxRatio = r; maxCell = p; }
+    if (r >= 1) bin[p] = 1;
+  }
+  ENG.history.push(bin); if (ENG.history.length > 4) ENG.history.shift();
+  const conf = new Uint8Array(GW * GH); for (let p = 0; p < conf.length; p++) { let c = 0; for (const h of ENG.history) c += h[p]; conf[p] = c >= S.settings.persist ? 1 : 0; }
+  const comps = components(conf).filter(c => c.size >= S.settings.minCl);
+  $('hudScore').textContent = '점수 ' + maxRatio.toFixed(2); $('hudThr').textContent = '기준 1.00 (×' + m.toFixed(2) + ')';
+  draw(kn, cs, thr, cthr, comps);
+  if (comps.length) alarm(maxRatio, maxCell, comps);
+  else { $('viewStage').classList.remove('alarm'); $('viewBanner').classList.remove('show'); }
+}
+function draw(kn, cs, thr, cthr, comps) {
+  const v = $('viewVideo'), W = v.clientWidth, H = v.clientHeight; if (ov.width !== W || ov.height !== H) { ov.width = W; ov.height = H; }
+  octx.clearRect(0, 0, W, H);
+  // letterboxed video rect
+  const vr = v.videoWidth / v.videoHeight, cr = W / H; let dw = W, dh = H, ox = 0, oy = 0;
+  if (vr > cr) { dh = W / vr; oy = (H - dh) / 2; } else { dw = H * vr; ox = (W - dw) / 2; }
+  const cw = dw / GW, ch = dh / GH;
+  if (S.heat) for (let p = 0; p < GW * GH; p++) { const r = Math.min(1.5, Math.max(kn[p] / thr, cs[p] / cthr)); if (r < 0.4) continue; const x = p % GW, y = (p / GW) | 0; octx.fillStyle = r >= 1 ? `rgba(255,59,74,${0.25 + 0.35 * Math.min(1, r - 1)})` : `rgba(255,179,71,${0.15 + 0.3 * (r - 0.4)})`; octx.fillRect(ox + x * cw, oy + y * ch, cw, ch); }
+  octx.lineWidth = 3; octx.strokeStyle = '#ff3b4a';
+  for (const c of comps) { let x0 = GW, y0 = GH, x1 = -1, y1 = -1; for (const p of c.cells) { const x = p % GW, y = (p / GW) | 0; x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } octx.strokeRect(ox + x0 * cw - 2, oy + y0 * ch - 2, (x1 - x0 + 1) * cw + 4, (y1 - y0 + 1) * ch + 4); }
+}
+function alarm(ratio, cell, comps) {
+  $('viewStage').classList.add('alarm'); $('viewBanner').classList.add('show');
+  const now = Date.now();
+  if (now - S.lastAlarm > 2000) {
+    S.lastAlarm = now;
+    if (navigator.vibrate) navigator.vibrate([200, 80, 200]);
+    beep();
+    const cellName = String.fromCharCode(65 + ((cell / GW) | 0)) + (cell % GW + 1);
+    const e = { t: new Date(), ratio: ratio.toFixed(2), cell: cellName, size: Math.max(...comps.map(c => c.size)) };
+    S.log.unshift(e); renderLog(); S.alarmCount++;
+    if (S.conn && S.conn.open) S.conn.send({ type: 'alarm', ratio: e.ratio });
+    UP.event('alarm', { ratio: +e.ratio, cell: e.cell, cluster: e.size, clusters: comps.length, thr: ENG.thr, colorThr: ENG.colorThr });
+    REC.onAlarm();
+  }
+}
+function beep() { if (S.mute) return; try { if (!S.audio) S.audio = new (window.AudioContext || window.webkitAudioContext)(); const a = S.audio, o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; g.gain.value = 0.25; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + 0.18); } catch (e) {} }
+function renderLog() { $('log').innerHTML = S.log.slice(0, 50).map(e => `<div><span class="t num">${e.t.toTimeString().slice(0, 8)}</span><span>점수 ${e.ratio} · 위치 ${e.cell} · ${e.size}패치</span></div>`).join(''); }
+function renderCalibInfo() { $('calibInfo').innerHTML = ENG.bank ? `<dt>기준 저장소</dt><dd class="num">${ENG.bank.length / D} 패치 (${ENG.frames.length}프레임)</dd><dt>기준 점수</dt><dd class="num">${ENG.thr.toFixed(3)} / 색 ${ENG.colorThr.toFixed(3)}</dd><dt>선명도 기준</dt><dd class="num">${ENG.blurRef.toFixed(1)}</dd>` : '<dt>기준 저장소</dt><dd>없음</dd>'; }
+
+/* ---------- calibration & controls ---------- */
+$('btnCalib').onclick = () => {
+  if (S.calibrating) return;
+  ensureAudio(); ENG.reset(); S.running = false; S.calibrating = true; $('btnScan').disabled = true; $('btnNormal').disabled = true;
+  $('viewBanner').textContent = '보정 중 — 빈 오버헤드빈만 비추세요'; $('viewBanner').classList.add('show', 'calib');
+  setTimeout(() => {
+    S.calibrating = false; $('viewBanner').classList.remove('show', 'calib'); $('viewBanner').textContent = '⚠ 이물질 의심';
+    if (finishCalibration()) { $('viewStatus').textContent = `보정 완료. 기준 패치 ${ENG.bank.length / D}개. 검색을 시작하세요.`; $('viewStatus').className = 'status ok'; $('btnScan').disabled = false; $('btnNormal').disabled = false; renderCalibInfo();
+      UP.event('calibration', { frames: ENG.frames.length, bank: ENG.bank.length / D, thr: ENG.thr, colorThr: ENG.colorThr, blurRef: ENG.blurRef, colorRef: ENG.colorRef }); }
+    else { $('viewStatus').textContent = '프레임이 부족합니다. 영상이 나오는지 확인하고 다시 보정하세요.'; $('viewStatus').className = 'status bad'; UP.event('calibration_failed', { frames: ENG.frames.length }); }
+  }, 8000);
+};
+$('btnScan').onclick = () => { ensureAudio(); S.running = !S.running; $('btnScan').textContent = S.running ? '■ 검색 정지' : '② 검색 시작'; $('btnScan').classList.toggle('danger', S.running); $('viewStatus').textContent = S.running ? '검색 중 — 실제 검색 속도로 쓸어가세요' : '정지';
+  if (S.running) { UP.event('scan_start', {}); REC.start($('viewVideo').srcObject); }
+  else { $('viewStage').classList.remove('alarm'); $('viewBanner').classList.remove('show'); octx.clearRect(0, 0, ov.width, ov.height); UP.event('scan_stop', { alarms: S.alarmCount }); REC.stop(); } };
+$('btnHeat').onclick = () => { S.heat = !S.heat; $('btnHeat').classList.toggle('primary', S.heat); };
+$('btnMute').onclick = () => { S.mute = !S.mute; $('btnMute').textContent = S.mute ? '🔕 무음' : '🔔 소리'; };
+$('btnNormal').onclick = () => {
+  if (S.settings.lockMax !== null && !askPin()) return;
+  // add the currently flagged patches (last frame) to the bank so recurring fixtures stop alarming
+  const v = $('viewVideo'); actx.drawImage(v, 0, 0, AW, AH); const { feats } = extract(actx.getImageData(0, 0, AW, AH)); const nf = normalize(feats);
+  const last = ENG.history[ENG.history.length - 1]; if (!last) return; const add = [];
+  for (let p = 0; p < last.length; p++) if (last[p]) add.push(nf.subarray(p * D, p * D + D));
+  if (!add.length) { $('viewStatus').textContent = '등록할 표시 영역이 없습니다.'; return; }
+  const nb = new Float32Array(ENG.bank.length + add.length * D); nb.set(ENG.bank); add.forEach((a, i) => nb.set(a, ENG.bank.length + i * D)); ENG.bank = nb; ENG.history = [];
+  $('viewStatus').textContent = `${add.length}패치를 정상으로 등록했습니다.`; renderCalibInfo(); UP.event('normal_registered', { patches: add.length, bank: ENG.bank.length / D });
+};
+$('btnExport').onclick = async () => { const csv = 'time,score_ratio,cell,cluster_patches\n' + S.log.map(e => `${e.t.toISOString()},${e.ratio},${e.cell},${e.size}`).join('\n'); try { await navigator.clipboard.writeText(csv); $('viewStatus').textContent = '기록을 클립보드에 복사했습니다.'; } catch (e) { const ta = document.createElement('textarea'); ta.value = csv; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); $('viewStatus').textContent = '기록을 복사했습니다.'; } };
+$('btnClear').onclick = () => { S.log = []; renderLog(); };
+function ensureAudio() { try { if (!S.audio) S.audio = new (window.AudioContext || window.webkitAudioContext)(); if (S.audio.state === 'suspended') S.audio.resume(); } catch (e) {} }
+
+/* settings */
+const st = S.settings;
+function applySettingsUI() {
+  $('margin').value = st.margin; $('marginVal').textContent = st.margin.toFixed(2);
+  $('margin').max = st.lockMax !== null ? st.lockMax : 3.0;
+  $('lockNote').textContent = st.lockMax !== null ? `감독자 잠금: 배수 상한 ${st.lockMax.toFixed(2)} (이보다 둔감하게 설정 불가)` : '잠금 없음';
+  $('minCl').value = st.minCl; $('minClVal').textContent = st.minCl; $('persist').value = st.persist; $('persistVal').textContent = st.persist;
+  $('ignoreEdge').checked = st.ignoreEdge; $('blurSkip').checked = st.blurSkip;
+  $('upOn').checked = st.upOn; $('upUrl').value = st.upUrl; $('upKey').value = st.upKey; $('upDev').value = st.upDev;
+  document.querySelectorAll('.seg').forEach(b => b.classList.toggle('primary', b.dataset.v === st.clipMode));
+  UP.badge();
+}
+$('upOn').onchange = e => { st.upOn = e.target.checked; saveSettings(); UP.badge(); UP.pump(); };
+$('upUrl').onchange = e => { st.upUrl = e.target.value.trim(); saveSettings(); UP.badge(); };
+$('upKey').onchange = e => { st.upKey = e.target.value.trim(); saveSettings(); UP.badge(); };
+$('upDev').onchange = e => { st.upDev = e.target.value.trim(); saveSettings(); };
+document.querySelectorAll('.seg').forEach(b => b.onclick = () => { st.clipMode = b.dataset.v; saveSettings(); applySettingsUI(); });
+// config via link: binscan.html#cfg=<base64 json {url,key,dev}> (one-time handoff to a worker's phone)
+try { const m = location.hash.match(/cfg=([^&]+)/); if (m) { const c = JSON.parse(atob(decodeURIComponent(m[1]))); if (c.url) st.upUrl = c.url; if (c.key) st.upKey = c.key; if (c.dev) st.upDev = c.dev; st.upOn = true; saveSettings(); history.replaceState(null, '', location.pathname); } } catch (e) {}
+$('margin').oninput = e => { st.margin = Math.min(+e.target.value, st.lockMax ?? 3); $('marginVal').textContent = st.margin.toFixed(2); saveSettings(); };
+$('minCl').oninput = e => { st.minCl = +e.target.value; $('minClVal').textContent = st.minCl; saveSettings(); };
+$('persist').oninput = e => { st.persist = +e.target.value; $('persistVal').textContent = st.persist; saveSettings(); };
+$('ignoreEdge').onchange = e => { st.ignoreEdge = e.target.checked; saveSettings(); };
+$('blurSkip').onchange = e => { st.blurSkip = e.target.checked; saveSettings(); };
+function askPin() { const p = window.prompt('감독자 PIN'); return p === st.pin; }
+$('btnLock').onclick = () => { st.lockMax = st.margin; saveSettings(); applySettingsUI(); };
+$('btnUnlock').onclick = () => { if (st.lockMax === null) return; if (askPin()) { st.lockMax = null; saveSettings(); applySettingsUI(); } else $('lockNote').textContent = 'PIN이 틀렸습니다.'; };
+$('btnPin').onclick = () => { if (st.lockMax !== null && !askPin()) return; const v = $('pinNew').value.trim(); if (v.length >= 4) { st.pin = v; saveSettings(); $('pinNew').value = ''; $('lockNote').textContent = 'PIN을 저장했습니다.'; } };
+$('btnSettings').onclick = () => { applySettingsUI(); renderCalibInfo(); $('drawer').classList.add('open'); };
+$('btnCloseSettings').onclick = () => $('drawer').classList.remove('open');
+$('drawer').onclick = e => { if (e.target === $('drawer')) $('drawer').classList.remove('open'); };
+
+/* ---------- camera ---------- */
+async function openCamera(videoEl) {
+  if (S.localStream) S.localStream.getTracks().forEach(t => t.stop());
+  const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: S.facing }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: false });
+  S.localStream = s; videoEl.srcObject = s; await videoEl.play().catch(() => {});
+  const tr = s.getVideoTracks()[0], set = tr.getSettings(); $('camRes').textContent = `${set.width}×${set.height}`;
+  return s;
+}
+async function setTorch(on) { const tr = S.localStream && S.localStream.getVideoTracks()[0]; if (!tr) return false; try { await tr.applyConstraints({ advanced: [{ torch: on }] }); S.torch = on; $('camTorch').textContent = on ? '플래시 켜짐' : '플래시 꺼짐'; return true; } catch (e) { $('camStatus').textContent = '이 폰·브라우저는 웹에서 플래시 제어가 안 됩니다. 외장 라이트를 쓰세요.'; return false; } }
+$('btnTorch').onclick = () => setTorch(!S.torch);
+$('btnFlip').onclick = async () => { S.facing = S.facing === 'environment' ? 'user' : 'environment'; await openCamera($('camVideo')); if (S.call) { const sender = S.call.peerConnection.getSenders().find(x => x.track && x.track.kind === 'video'); if (sender) sender.replaceTrack(S.localStream.getVideoTracks()[0]); } };
+
+/* ---------- peer ---------- */
+function setPeerBadge(txt, on) { $('peerBadge').textContent = txt; $('peerBadge').classList.toggle('on', !!on); }
+function makePeer(id) { const p = new Peer(id, { debug: 1 }); p.on('error', e => { const s = S.mode === 'cam' ? $('camStatus') : $('viewStatus'); s.className = 'status bad'; s.textContent = e.type === 'peer-unavailable' ? '해당 코드의 카메라 폰을 찾을 수 없습니다. 코드와 네트워크를 확인하세요.' : e.type === 'unavailable-id' ? '코드가 이미 사용 중입니다. 다시 시작하세요.' : '연결 오류: ' + e.type; setPeerBadge('오류', false); }); return p; }
+
+async function startCam() {
+  show('cam'); S.mode = 'cam';
+  try { await openCamera($('camVideo')); } catch (e) { $('camStatus').textContent = '카메라 권한이 필요합니다 (HTTPS에서만 동작).'; $('camStatus').className = 'status bad'; return; }
+  const code = String(Math.floor(1000 + Math.random() * 9000)); $('camCode').textContent = code;
+  S.peer = makePeer(PREFIX + code);
+  S.peer.on('open', () => { $('camStatus').textContent = '뷰어 폰에서 이 코드를 입력하세요'; $('camStatus').className = 'status'; setPeerBadge('대기', false); });
+  S.peer.on('connection', c => {
+    S.conn = c;
+    c.on('open', () => { setPeerBadge('연결됨', true); $('camStatus').textContent = '뷰어 연결됨 — 송출 중'; $('camStatus').className = 'status ok'; S.call = S.peer.call(c.peer, S.localStream); });
+    c.on('data', d => { if (d && d.type === 'alarm') { $('camBanner').classList.add('show'); $('camStage').classList.add('alarm'); if (navigator.vibrate) navigator.vibrate([200, 80, 200]); setTimeout(() => { $('camBanner').classList.remove('show'); $('camStage').classList.remove('alarm'); }, 1500); } if (d && d.type === 'torch') setTorch(!!d.on); });
+    c.on('close', () => { setPeerBadge('대기', false); $('camStatus').textContent = '뷰어 연결 끊김. 다시 연결을 기다립니다.'; $('camStatus').className = 'status'; });
+  });
+  wake();
+}
+function startView(code) {
+  show('view'); S.mode = 'view'; beginSession(); $('viewStatus').textContent = '연결 중…'; $('viewStatus').className = 'status';
+  S.peer = makePeer(undefined);
+  S.peer.on('open', () => {
+    S.conn = S.peer.connect(PREFIX + code, { reliable: true });
+    S.conn.on('open', () => { setPeerBadge('연결됨', true); $('viewStatus').textContent = '연결됨. 영상 수신 대기…'; });
+    S.conn.on('close', () => { setPeerBadge('끊김', false); $('viewStatus').textContent = '카메라 폰과 연결이 끊겼습니다.'; $('viewStatus').className = 'status bad'; });
+  });
+  S.peer.on('call', call => { S.call = call; call.answer(); call.on('stream', st => { const v = $('viewVideo'); v.srcObject = st; v.play().catch(() => {}); $('viewStatus').textContent = '영상 수신 중. 빈 오버헤드빈을 비추고 보정을 누르세요.'; $('viewStatus').className = 'status ok'; }); });
+  wake(); requestAnimationFrame(loop);
+}
+async function startSolo() {
+  show('view'); S.mode = 'solo'; beginSession(); setPeerBadge('단독', true);
+  try { await openCamera($('viewVideo')); $('viewStatus').textContent = '단독 모드. 빈 상태를 비추고 보정을 누르세요.'; $('viewStatus').className = 'status ok'; } catch (e) { $('viewStatus').textContent = '카메라 권한이 필요합니다 (HTTPS에서만 동작).'; $('viewStatus').className = 'status bad'; }
+  $('btnTorch').onclick = () => setTorch(!S.torch);
+  wake(); requestAnimationFrame(loop);
+}
+function wake() { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => S.wake = w).catch(() => {}); }
+function show(id) { document.querySelectorAll('section').forEach(s => s.classList.toggle('active', s.id === id)); }
+function teardown() {
+  if (S.mode === 'view' || S.mode === 'solo') endSession();
+  S.running = false; S.calibrating = false; S.mode = null; S.session = null;
+  if (S.call) { try { S.call.close(); } catch (e) {} S.call = null; }
+  if (S.conn) { try { S.conn.close(); } catch (e) {} S.conn = null; }
+  if (S.peer) { try { S.peer.destroy(); } catch (e) {} S.peer = null; }
+  if (S.localStream) { S.localStream.getTracks().forEach(t => t.stop()); S.localStream = null; }
+  $('camVideo').srcObject = null; $('viewVideo').srcObject = null; setPeerBadge('오프라인', false);
+  $('viewStage').classList.remove('alarm'); $('viewBanner').classList.remove('show'); $('btnScan').textContent = '② 검색 시작'; $('btnScan').classList.remove('danger');
+  show('home');
+}
+$('goCam').onclick = startCam;
+$('goView').onclick = () => { const c = $('codeIn').value.trim(); if (!/^\d{4}$/.test(c)) { $('codeIn').focus(); return; } startView(c); };
+$('goSolo').onclick = startSolo;
+$('btnHome').onclick = teardown; $('btnCamEnd').onclick = teardown;
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { wake(); UP.pump(); } });
+window.addEventListener('pagehide', () => { if (S.mode === 'view' || S.mode === 'solo') endSession(); UP.save(); });
+UP.load(); applySettingsUI(); UP.pump();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BinScan Dashboard</title>
+<style>
+:root{--bg:#0b1016;--panel:#121a24;--panel2:#1a2432;--line:#243040;--fg:#e8eef5;--mute:#8fa0b3;--accent:#4cc3ff;--ok:#39d98a;--warn:#ffb347;--bad:#ff3b4a;
+  --font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--font);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 8px}
+p{color:var(--mute);margin:0}
+button,input,select{font:inherit;color:inherit;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+button.primary{background:var(--accent);color:#06131c;border-color:transparent;font-weight:700}
+button.sm{min-height:34px;padding:6px 10px;font-size:13px}
+button.ok{border-color:var(--ok);color:var(--ok)}button.bad{border-color:var(--bad);color:var(--bad)}button.on{background:var(--panel);font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 160px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.tile b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.tile span{font-size:12px;color:var(--mute)}
+.num{font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mute);font-weight:500}
+.wrap{overflow-x:auto}
+.sess{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--panel)}
+.sess summary{padding:12px 14px;cursor:pointer;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.sess summary b{font-variant-numeric:tabular-nums}
+.pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.pill.bad{border-color:var(--bad);color:var(--bad)}.pill.ok{border-color:var(--ok);color:var(--ok)}.pill.warn{border-color:var(--warn);color:var(--warn)}
+video{width:100%;max-width:480px;border-radius:10px;background:#000}
+.status{font-size:13px;color:var(--mute)}
+code{background:var(--panel2);padding:2px 6px;border-radius:6px;font-size:12px;word-break:break-all}
+textarea{width:100%;min-height:60px;font:12px/1.4 ui-monospace,monospace;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px}
+</style>
+</head>
+<body>
+<h1>BinScan 관리자 대시보드</h1>
+<p>폰에서 올라온 점수 기록과 클립을 보고, 알림마다 진짜/오탐을 표시합니다. 표시한 결과가 임계값 튜닝의 근거가 됩니다.</p>
+
+<h2>접속</h2>
+<div class="card">
+  <div class="row">
+    <input id="url" placeholder="https://xxxx.supabase.co" autocapitalize="off">
+    <input id="key" placeholder="anon 키" autocapitalize="off">
+    <input id="tok" placeholder="관리자 토큰 (setup.sql의 admin_token)" type="password">
+    <button class="primary" id="load" style="flex:0 0 auto">불러오기</button>
+  </div>
+  <div class="status" id="st">—</div>
+</div>
+
+<div id="main" hidden>
+<h2>요약</h2>
+<div class="tiles" id="tiles"></div>
+<div class="row" style="margin-top:10px">
+  <select id="fDev"><option value="">기기 전체</option></select>
+  <select id="fLabel"><option value="">알림 전체</option><option value="none">미표시</option><option value="true_positive">진짜</option><option value="false_alarm">오탐</option><option value="unsure">모름</option></select>
+  <button id="csv">알림 CSV 복사</button>
+  <button id="more">이전 기록 더</button>
+</div>
+
+<h2>세션</h2>
+<div id="sessions"></div>
+
+<h2>작업자 폰 설정 링크</h2>
+<div class="card">
+  <p>작업자 폰에서 이 링크를 한 번 열면 전송 설정이 자동으로 저장됩니다. (링크에 anon 키가 들어 있으니 내부에서만 공유)</p>
+  <div class="row"><input id="appUrl" placeholder="binscan.html이 올라간 주소 (https://…/binscan.html)" autocapitalize="off"><input id="devName" placeholder="기기 이름 (예: ICN-뷰어1)"><button id="mkLink" style="flex:0 0 auto">링크 만들기</button></div>
+  <textarea id="linkOut" readonly placeholder="여기에 링크가 나옵니다"></textarea>
+</div>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const C = { url: '', key: '', tok: '' };
+try { Object.assign(C, JSON.parse(localStorage.getItem('binscan.dash') || '{}')); } catch (e) {}
+$('url').value = C.url; $('key').value = C.key; $('tok').value = C.tok;
+let rows = [], oldest = null;
+const hdr = () => ({ apikey: C.key, Authorization: 'Bearer ' + C.key, 'Content-Type': 'application/json' });
+const base = () => C.url.replace(/\/$/, '');
+async function rpc(fn, body) { const r = await fetch(base() + '/rest/v1/rpc/' + fn, { method: 'POST', headers: hdr(), body: JSON.stringify(body) }); if (!r.ok) throw new Error(fn + ' ' + r.status + ' ' + (await r.text()).slice(0, 120)); return r.json(); }
+async function load(more) {
+  C.url = $('url').value.trim(); C.key = $('key').value.trim(); C.tok = $('tok').value.trim();
+  try { localStorage.setItem('binscan.dash', JSON.stringify(C)); } catch (e) {}
+  $('st').textContent = '불러오는 중…';
+  try {
+    const got = await rpc('binscan_admin_events', { p_token: C.tok, p_limit: 1000, p_before: more ? oldest : null });
+    if (!got.length && !more) { $('st').textContent = '기록이 없거나 토큰이 틀렸습니다. (틀린 토큰도 빈 결과를 돌려줍니다)'; return; }
+    rows = more ? rows.concat(got) : got; oldest = rows.length ? rows[rows.length - 1].created_at : null;
+    $('st').textContent = `${rows.length}건 로드됨`; $('main').hidden = false; render();
+  } catch (e) { $('st').textContent = '오류: ' + e.message; }
+}
+const fmt = t => new Date(t).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const clipUrl = p => base() + '/storage/v1/object/public/binscan-clips/' + p;
+function render() {
+  const dev = $('fDev').value, lab = $('fLabel').value;
+  const devs = [...new Set(rows.map(r => r.device).filter(Boolean))];
+  $('fDev').innerHTML = '<option value="">기기 전체</option>' + devs.map(d => `<option ${d === dev ? 'selected' : ''}>${d}</option>`).join('');
+  const vis = rows.filter(r => !dev || r.device === dev);
+  const alarms = vis.filter(r => r.type === 'alarm');
+  const tp = alarms.filter(a => a.label === 'true_positive').length, fa = alarms.filter(a => a.label === 'false_alarm').length;
+  const sess = new Map(); for (const r of vis) { if (!sess.has(r.session_id)) sess.set(r.session_id, []); sess.get(r.session_id).push(r); }
+  $('tiles').innerHTML = [
+    ['세션', sess.size], ['알림', alarms.length], ['진짜', tp], ['오탐', fa],
+    ['오탐률', alarms.length ? Math.round(100 * fa / Math.max(1, tp + fa)) + '%' : '—'], ['클립', vis.filter(r => r.type === 'clip').length]
+  ].map(([k, v]) => `<div class="tile"><b>${v}</b><span>${k}</span></div>`).join('');
+  $('sessions').innerHTML = [...sess.entries()].map(([sid, ev]) => {
+    ev.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const al = ev.filter(e => e.type === 'alarm').filter(a => !lab || (lab === 'none' ? !a.label : a.label === lab));
+    const cal = ev.find(e => e.type === 'calibration'), clips = ev.filter(e => e.type === 'clip');
+    const end = ev.find(e => e.type === 'session_end');
+    const first = ev[0];
+    return `<details class="sess"><summary><b>${fmt(first.created_at)}</b><span>${first.device || '기기미상'}</span><span class="pill">${first.mode || ''}</span><span class="pill ${al.length ? 'bad' : 'ok'}">알림 ${ev.filter(e => e.type === 'alarm').length}</span><span class="pill">클립 ${clips.length}</span>${cal ? `<span class="pill">기준 ${(+cal.data.thr).toFixed(3)} · 패치 ${cal.data.bank}</span>` : '<span class="pill warn">보정 없음</span>'}${end ? '' : '<span class="pill warn">종료 기록 없음</span>'}</summary>
+      <div style="padding:0 14px 14px">
+      ${cal ? `<p class="num">보정: ${cal.data.frames}프레임 → 저장소 ${cal.data.bank}패치 · 기준점수 ${(+cal.data.thr).toFixed(3)} · 색기준 ${(+cal.data.colorThr).toFixed(3)} · 선명도 ${(+cal.data.blurRef).toFixed(1)}</p>` : ''}
+      <div class="wrap"><table><tr><th>시각</th><th>점수</th><th>위치</th><th>덩어리</th><th>배수</th><th>판정</th><th>클립</th></tr>
+      ${al.map(a => `<tr><td class="num">${fmt(a.ts || a.created_at)}</td><td class="num">${a.data.ratio}</td><td>${a.data.cell}</td><td class="num">${a.data.cluster}</td><td class="num">${a.margin}</td>
+        <td><div class="row" style="gap:4px"><button class="sm ok ${a.label === 'true_positive' ? 'on' : ''}" data-id="${a.id}" data-l="true_positive">진짜</button><button class="sm bad ${a.label === 'false_alarm' ? 'on' : ''}" data-id="${a.id}" data-l="false_alarm">오탐</button><button class="sm ${a.label === 'unsure' ? 'on' : ''}" data-id="${a.id}" data-l="unsure">모름</button></div></td>
+        <td>${nearestClip(clips, a)}</td></tr>`).join('') || '<tr><td colspan="7" class="status">알림 없음</td></tr>'}
+      </table></div>
+      ${clips.length ? `<details><summary class="status">클립 ${clips.length}개 모두 보기</summary>${clips.map(c => `<p class="num">${fmt(c.created_at)} · seg ${c.data.segment}${c.data.preroll ? ' (사전)' : ''} · ${(c.data.bytes / 1e6).toFixed(1)}MB</p><video controls preload="none" src="${clipUrl(c.clip_path)}"></video>`).join('')}</details>` : ''}
+      <p class="status">세션 ID <code>${sid}</code></p>
+      </div></details>`;
+  }).join('') || '<p>표시할 세션이 없습니다.</p>';
+  document.querySelectorAll('button[data-l]').forEach(b => b.onclick = async () => {
+    try { await rpc('binscan_admin_label', { p_token: C.tok, p_id: +b.dataset.id, p_label: b.dataset.l }); const r = rows.find(x => x.id === +b.dataset.id); if (r) r.label = b.dataset.l; render(); } catch (e) { $('st').textContent = '판정 저장 실패: ' + e.message; }
+  });
+}
+function nearestClip(clips, a) {
+  // clip segments cover 10 s each; show the one(s) recorded around the alarm time
+  const t = new Date(a.ts || a.created_at).getTime();
+  const near = clips.filter(c => { const ct = new Date(c.created_at).getTime(); return ct > t - 2000 && ct < t + 25000; }).slice(0, 2);
+  return near.length ? near.map(c => `<a href="${clipUrl(c.clip_path)}" target="_blank" rel="noopener">▶ seg ${c.data.segment}</a>`).join('<br>') : '<span class="status">—</span>';
+}
+$('load').onclick = () => load(false); $('more').onclick = () => load(true);
+$('fDev').onchange = render; $('fLabel').onchange = render;
+$('csv').onclick = async () => {
+  const al = rows.filter(r => r.type === 'alarm');
+  const csv = 'time,device,session,score_ratio,cell,cluster,margin,label,clip\n' + al.map(a => [a.ts || a.created_at, a.device || '', a.session_id, a.data.ratio, a.data.cell, a.data.cluster, a.margin, a.label || '', ''].join(',')).join('\n');
+  try { await navigator.clipboard.writeText(csv); $('st').textContent = 'CSV 복사됨'; } catch (e) { $('st').textContent = '복사 실패'; }
+};
+$('mkLink').onclick = () => {
+  const app = $('appUrl').value.trim(); if (!app) return;
+  const cfg = btoa(unescape(encodeURIComponent(JSON.stringify({ url: C.url, key: C.key, dev: $('devName').value.trim() }))));
+  $('linkOut').value = app + '#cfg=' + encodeURIComponent(cfg);
+};
+if (C.url && C.key && C.tok) load(false);
+})();
+</script>
+</body>
+</html>
